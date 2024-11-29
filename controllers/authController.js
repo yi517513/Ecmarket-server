@@ -60,6 +60,7 @@ const login = (req, res) => {
 
   try {
     // throw new Error("錯誤測試");
+    console.log("Current NODE_ENV:", process.env.NODE_ENV);
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
