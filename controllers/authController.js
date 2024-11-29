@@ -61,19 +61,17 @@ const login = (req, res) => {
   try {
     // throw new Error("錯誤測試");
 
-    const isProduction = process.env.NODE_ENV === "production";
-
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: isProduction, // 在生產環境中啟用 secure 標記
       sameSite: "None", // 如果是跨域，設置為 "None"
+      secure: true, // 在生產環境中啟用 secure 標記
       maxAge: 3600000, // 設置 Cookie 有效期 (1 小時)
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: isProduction, // 在生產環境中啟用 secure 標記
       sameSite: "None",
+      secure: true, // 在生產環境中啟用 secure 標記
       maxAge: 7 * 24 * 60 * 60 * 1000, // 設置 7 天有效期
     });
 
