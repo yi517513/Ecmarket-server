@@ -6,28 +6,21 @@ const ecpay_payment = require("ecpay_aio_nodejs");
 const { MERCHANTID, HASHKEY, HASHIV, RETURN_URL, CLITEN_BACK_URL } =
   process.env;
 
+const ecpayOptions = {
+  OperationMode: "Test", // Test or Production
+  MercProfile: {
+    MerchantID: MERCHANTID,
+    HashKey: HASHKEY,
+    HashIV: HASHIV,
+  },
+  IgnorePayment: [], // Disabled payment methods (if any)
+  IsProjectContractor: false,
+};
+
 const createOrder = async (req, res) => {
   const { owner, _id, price, amount, title } = req.body;
   const buyerId = req.user.id;
   const totalAmount = price * amount;
-
-  const options = {
-    OperationMode: "Test", //Test or Production
-    MercProfile: {
-      MerchantID: MERCHANTID,
-      HashKey: HASHKEY,
-      HashIV: HASHIV,
-    },
-    IgnorePayment: [
-      // "Credit",
-      // "WebATM",
-      //    "ATM",
-      //    "CVS",
-      //    "BARCODE",
-      //    "AndroidPay"
-    ],
-    IsProjectContractor: false,
-  };
   let TradeNo;
 
   const MerchantTradeDate = new Date().toLocaleString("zh-TW", {
@@ -56,7 +49,7 @@ const createOrder = async (req, res) => {
   console.log(RETURN_URL);
 
   try {
-    const create = new ecpay_payment(options);
+    const create = new ecpay_payment(ecpayOptions);
     const paymentHtml = create.payment_client.aio_check_out_all(base_param);
     const transaction = new Transaction({
       buyerId,
@@ -114,15 +107,14 @@ const getOrder = async (req, res) => {
 };
 
 const paymentReturn = async (req, res) => {
-  console.log(`using paymentReturn`);
   console.log("req.body:", req.body);
 
   const { CheckMacValue } = req.body;
   const data = { ...req.body };
 
-  delete data.CheckMacValue; // 此段不驗證
+  // delete data.CheckMacValue; // 此段不驗證
 
-  const create = new ecpay_payment(options);
+  const create = new ecpay_payment(ecpayOptions);
   const checkValue = create.payment_client.helper.gen_chk_mac_value(data);
 
   console.log(
