@@ -64,11 +64,15 @@ const login = (req, res) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // 在生產環境中啟用 secure 標記
+      sameSite: "None", // 如果是跨域，設置為 "None"
+      maxAge: 3600000, // 設置 Cookie 有效期 (1 小時)
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // 在生產環境中啟用 secure 標記
+      sameSite: "None",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 設置 7 天有效期
     });
 
     return res.status(200).send({ message: "登入成功", data: user.id });

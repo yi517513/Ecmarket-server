@@ -35,7 +35,6 @@ const corsOptions = {
   methods: ["GET", "POST", "PATCH", "DELETE"], // 允許的 HTTP 方法
   allowedHeaders: ["Content-Type", "Authorization"], // 允許的頭部信息
   credentials: true, // 允許跨域設置 cookies
-  sameSite: "None", // 如果前后端跨域
 };
 
 app.set("view engine", "ejs");
