@@ -87,6 +87,8 @@ passport.use(
 const passport_Refresh = (req, res, next) => {
   const refreshToken = req.cookies.refreshToken;
 
+  console.log(refreshToken);
+
   if (!refreshToken) {
     return res.status(401).send();
   }
