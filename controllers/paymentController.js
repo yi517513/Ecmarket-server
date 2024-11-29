@@ -114,6 +114,9 @@ const getOrder = async (req, res) => {
 };
 
 const paymentReturn = async (req, res) => {
+  console.log(`using paymentReturn`);
+  console.log("req.body:", req.body);
+
   const { CheckMacValue } = req.body;
   const data = { ...req.body };
 
