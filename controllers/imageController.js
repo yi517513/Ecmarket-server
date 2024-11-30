@@ -3,10 +3,9 @@ const Image = require("../models/imageModel");
 const { s3, DeleteObjectCommand } = require("../config/s3");
 
 const uploadProductImage = async (req, res) => {
-  console.log(`using uploadProductImage`);
   try {
     if (!req.file) {
-      return res.status(400).send({ message: "沒有上傳圖片" });
+      return res.status(400).send({ message: "沒有上傳圖片", data: null });
     }
 
     const imageUrl = req.file.location;
@@ -32,7 +31,6 @@ const uploadProductImage = async (req, res) => {
 };
 
 const getProductImages = async (req, res) => {
-  console.log("Inside getProductImages");
   try {
     const userId = req.user.id;
     // 從user中獲取products的ID陣列

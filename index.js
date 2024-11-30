@@ -22,8 +22,6 @@ const port = process.env.PORT || 8080; // process.env.PORT是Heroku自行動態�
 
 mongoose
   .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     serverSelectionTimeoutMS: 30000, // 設置30秒超時
   })
   .then(() => console.log("Connected to MongoDB"))

@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const gernerateToken = (user) => {
+const gernerateAccessToken = (user) => {
   const payload = {
     id: user.id,
   };
@@ -31,12 +31,11 @@ const gernerateRefreshToken = (user) => {
 };
 
 const register = async (req, res) => {
-  console.log(`using register route`);
   const { email, password, verificationCode } = req.body;
   try {
     const user = await User.findOne({ email }).exec();
     if (!user || user.verificationCode !== verificationCode) {
-      return res.status(400).send({ message: "驗證碼錯誤或過期" });
+      return res.status(400).send({ message: "驗證碼錯誤或過期", data: null });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -48,14 +47,17 @@ const register = async (req, res) => {
 
     return res.status(201).send({ message: "註冊成功", data: null });
   } catch (error) {
-    return res.status(500).send("伺服器發生錯誤 " + error.message);
+    console.log(error);
+    return res.status(500).send({ message: "伺服器發生錯誤", data: null });
   }
 };
 
 const login = (req, res) => {
-  console.log(`using login router`);
   const user = req.user;
-  const accessToken = gernerateToken(user);
+
+  console.log(user);
+
+  const accessToken = gernerateAccessToken(user);
   const refreshToken = gernerateRefreshToken(user);
 
   try {
@@ -144,7 +146,7 @@ const sendVerifyCode = async (req, res) => {
 
 const refreshAccessToken = (req, res) => {
   const user = req.user;
-  const newAccessToken = gernerateToken(user);
+  const newAccessToken = gernerateAccessToken(user);
 
   res.cookie("accessToken", newAccessToken, {
     httpOnly: true,

@@ -10,6 +10,6 @@ router.get("/productDetail/:productId", getPublicProductById);
 
 router.get("/", getAllPublicProducts);
 
-router.post("/payment-return", paymentReturn);
+router.post("/payment-result", paymentReturn);
 
 module.exports = router;

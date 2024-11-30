@@ -7,7 +7,7 @@ const {
   logout,
   checkAuth,
 } = require("../controllers/authController");
-const { passport_Refresh, passportLocal } = require("../middlewares/passport");
+const { passport_Refresh, passport_Local } = require("../middlewares/passport");
 const validators = require("../middlewares/validator");
 
 router.use("/", (req, res, next) => {
@@ -16,7 +16,7 @@ router.use("/", (req, res, next) => {
 
 router.post("/register", validators.register, register);
 
-router.post("/login", validators.login, passportLocal, login);
+router.post("/login", validators.login, passport_Local, login);
 
 router.post("/logout", logout);
 

@@ -44,6 +44,7 @@ const createOrder = async (req, res) => {
     ItemName: title,
     ReturnURL: RETURN_URL,
     ClientBackURL: CLITEN_BACK_URL,
+    NeedExtraPaidInfo: "1",
   };
 
   console.log(RETURN_URL);
@@ -112,17 +113,15 @@ const paymentReturn = async (req, res) => {
   const { CheckMacValue } = req.body;
   const data = { ...req.body };
 
-  delete data.CheckMacValue; // 此段不驗證
+  delete data.CheckMacValue; // 測試版加入CheckMacValue驗證會錯誤
 
   const create = new ecpay_payment(ecpayOptions);
   const checkValue = create.payment_client.helper.gen_chk_mac_value(data);
 
-  console.log(
-    "確認交易正確性：",
-    CheckMacValue === checkValue,
-    CheckMacValue,
-    checkValue
-  );
+  // 交易正確性為true
+  if (CheckMacValue !== checkValue) {
+    res.status(400).send({});
+  }
 
   // 交易成功後，需要回傳 1|OK 給綠界
   res.send("1|OK");
