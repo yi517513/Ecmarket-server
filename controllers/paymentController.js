@@ -44,7 +44,10 @@ const createOrder = async (req, res) => {
     ItemName: title,
     ReturnURL: RETURN_URL,
     ClientBackURL: CLITEN_BACK_URL,
-    NeedExtraPaidInfo: "Y",
+    // NeedExtraPaidInfo: "Y",
+    CustomField1: _id,
+    CustomField2: owner,
+    CustomField3: amount,
   };
 
   console.log(RETURN_URL);
