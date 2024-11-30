@@ -17,51 +17,51 @@ const ecpayOptions = {
   IsProjectContractor: false,
 };
 
+const MerchantTradeDate = new Date().toLocaleString("zh-TW", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+  timeZone: "UTC",
+});
+
 const createOrder = async (req, res) => {
   const { owner, _id, price, amount, title } = req.body;
   const buyerId = req.user.id;
   const totalAmount = price * amount;
   let TradeNo;
 
-  const MerchantTradeDate = new Date().toLocaleString("zh-TW", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-  });
-
   TradeNo = "test" + new Date().getTime();
 
-  let base_param = {
-    MerchantTradeNo: TradeNo, //請帶20碼uid, ex: f0a0d7e9fae1bb72bc93
-    MerchantTradeDate,
-    TotalAmount: totalAmount.toString(),
-    TradeDesc: title,
-    ItemName: title,
-    ReturnURL: RETURN_URL,
-    ClientBackURL: CLITEN_BACK_URL,
-    // NeedExtraPaidInfo: "Y",
-    CustomField1: _id,
-    CustomField2: owner,
-    CustomField3: amount,
-  };
-
-  console.log(RETURN_URL);
-
   try {
-    const create = new ecpay_payment(ecpayOptions);
-    const paymentHtml = create.payment_client.aio_check_out_all(base_param);
     const transaction = new Transaction({
       buyerId,
       sellerId: owner._id,
       productId: _id,
+      amount,
       totalAmount,
-      paymentHtml,
     });
+
+    let base_param = {
+      MerchantTradeNo: TradeNo, //請帶20碼uid, ex: f0a0d7e9fae1bb72bc93
+      MerchantTradeDate,
+      TotalAmount: totalAmount.toString(),
+      TradeDesc: title,
+      ItemName: title,
+      ReturnURL: RETURN_URL,
+      ClientBackURL: CLITEN_BACK_URL,
+      // NeedExtraPaidInfo: "Y",
+      CustomField1: transaction._id.toString(),
+      CustomField2: transaction.amount.toString(),
+    };
+
+    const create = new ecpay_payment(ecpayOptions);
+    const paymentHtml = create.payment_client.aio_check_out_all(base_param);
+
+    transaction.paymentHtml = paymentHtml;
 
     await transaction.save();
 
