@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { paymentReturn } = require("../controllers/paymentController");
+const { paymentResult } = require("../controllers/paymentController");
 const {
   getAllPublicProducts,
   getPublicProductById,
@@ -10,6 +10,6 @@ router.get("/productDetail/:productId", getPublicProductById);
 
 router.get("/", getAllPublicProducts);
 
-router.post("/payment-result", paymentReturn);
+router.post("/payment-result", paymentResult);
 
 module.exports = router;
