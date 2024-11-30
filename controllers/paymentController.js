@@ -124,9 +124,22 @@ const paymentResult = async (req, res) => {
   console.log(data);
 
   // 交易正確性為true
-  // if (CheckMacValue !== checkValue) {
-  //   res.status(400).send({});
-  // }
+  if (CheckMacValue === checkValue) {
+    const transactionId = data.CustomField1;
+    const amount = data.CustomField2;
+
+    // 更新transaction的paymentStatus
+    const transaction = await Transaction.findOneAndUpdate(
+      { _id: transactionId },
+      { paymentStatus: "completed" },
+      { new: true }
+    );
+    // 更新Product的inventory
+    await Product.findOneAndUpdate(
+      { _id: transaction.productId },
+      { $inc: { inventory: -amount } } // 使用 $inc 來遞減庫存
+    );
+  }
 
   // 交易成功後，需要回傳 1|OK 給綠界
   res.send("1|OK");
