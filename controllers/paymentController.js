@@ -112,7 +112,7 @@ const paymentReturn = async (req, res) => {
   const { CheckMacValue } = req.body;
   const data = { ...req.body };
 
-  // delete data.CheckMacValue; // 此段不驗證
+  delete data.CheckMacValue; // 此段不驗證
 
   const create = new ecpay_payment(ecpayOptions);
   const checkValue = create.payment_client.helper.gen_chk_mac_value(data);
