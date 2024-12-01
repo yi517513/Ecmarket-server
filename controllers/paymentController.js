@@ -29,7 +29,7 @@ const MerchantTradeDate = new Date().toLocaleString("zh-TW", {
 });
 
 const createOrder = async (req, res) => {
-  const { owner, _id, price, amount, title } = req.body;
+  const { owner, _id, price, amount, title, images } = req.body;
   const buyerId = req.user.id;
   const totalAmount = price * amount;
   let TradeNo;
@@ -41,6 +41,7 @@ const createOrder = async (req, res) => {
       buyerId,
       sellerId: owner._id,
       productId: _id,
+      image: images[0],
       amount,
       totalAmount,
     });
@@ -137,7 +138,7 @@ const paymentResult = async (req, res) => {
     // 更新Product的inventory
     await Product.findOneAndUpdate(
       { _id: transaction.productId },
-      { $inc: { inventory: -amount } } // 使用 $inc 來遞減庫存
+      { $inc: { inventory: -amount, pendingShipment: amount } } // 使用 $inc 來遞減庫存
     );
   }
 

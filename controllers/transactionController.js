@@ -36,6 +36,7 @@ const getOrders = async (req, res) => {
   }
 };
 
+// 買家待收貨
 const getInProgress = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -54,14 +55,19 @@ const getInProgress = async (req, res) => {
   }
 };
 
+// 賣家待出貨
 const getPendingShipment = async (req, res) => {
+  console.log(`getPendingShipment`);
   try {
     const { userId } = req.params;
     const foundTransaction = await Transaction.find({
       sellerId: userId,
       paymentStatus: "completed",
       shipmentStatus: "pending",
-    });
+    })
+      .populate("productId", ["title", "images"])
+      .exec();
+
     if (!foundTransaction) {
       return res.status(404).send("沒有交易紀錄");
     }
