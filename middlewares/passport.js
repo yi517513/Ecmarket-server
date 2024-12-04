@@ -53,9 +53,7 @@ const passport_Refresh = (req, res, next) => {
       if (!user) {
         res.clearCookie("refreshToken");
         res.clearCookie("accessToken");
-        return res
-          .status(401)
-          .send({ message: "Token失效，已登出", data: null });
+        return res.status(401).send({ message: null, data: null });
       }
       req.user = user;
       next();

@@ -36,7 +36,7 @@ passport.use(
   "local-strategy",
   new LocalStrategy(opts_local, async (email, password, done) => {
     try {
-      const foundUser = await User.findOne({ email }).exec();
+      const foundUser = await User.findOne({ email });
       if (!foundUser) {
         return done(null, false);
       }
@@ -53,7 +53,7 @@ passport.use(
   "access-token-strategy",
   new JwtStrategy(opts_access, async (jwt_payload, done) => {
     try {
-      const foundUser = await User.findById(jwt_payload.id).exec();
+      const foundUser = await User.findById(jwt_payload.id);
       if (foundUser) {
         return done(null, foundUser);
       } else {
@@ -69,7 +69,7 @@ passport.use(
   "refresh-token-strategy",
   new JwtStrategy(opts_refresh, async (jwt_payload, done) => {
     try {
-      const foundUser = await User.findById(jwt_payload.id).exec();
+      const foundUser = await User.findById(jwt_payload.id);
       if (foundUser) {
         return done(null, foundUser);
       } else {

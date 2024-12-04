@@ -1,39 +1,14 @@
 const User = require("../models/userModel");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
 const CryptoJS = require("crypto-js");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
-  },
-});
-
-const gernerateAccessToken = (user) => {
-  const payload = {
-    id: user.id,
-  };
-  return jwt.sign(payload, process.env.ACCESS_SECRET_KEY, { expiresIn: "5m" });
-};
-
-const gernerateRefreshToken = (user) => {
-  const payload = {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-  };
-  return jwt.sign(payload, process.env.REFRESH_SECRET_KEY, {
-    expiresIn: "1d",
-  });
-};
+const { gernerateToken } = require("../utils/tokenHelper");
+const { setTokenCookie } = require("../utils/cookieHelper");
+const { sendVerificationCode } = require("../utils/mailHelper");
 
 const register = async (req, res) => {
   const { email, password, verificationCode } = req.body;
   try {
-    const user = await User.findOne({ email }).exec();
+    const user = await User.findOne({ email });
     if (!user || user.verificationCode !== verificationCode) {
       return res.status(400).send({ message: "驗證碼錯誤或過期", data: null });
     }
@@ -42,7 +17,7 @@ const register = async (req, res) => {
     user.password = hashedPassword;
     user.verificationCode = undefined;
     user.username = email;
-    user.veriftyed = true;
+    user.verified = true;
     await user.save();
 
     return res.status(201).send({ message: "註冊成功", data: null });
@@ -55,30 +30,24 @@ const register = async (req, res) => {
 const login = (req, res) => {
   const user = req.user;
 
-  console.log(user);
-
-  const accessToken = gernerateAccessToken(user);
-  const refreshToken = gernerateRefreshToken(user);
+  const accessToken = gernerateToken(user, "access");
+  const refreshToken = gernerateToken(user, "refresh");
 
   try {
-    // throw new Error("錯誤測試");
-    console.log("Current NODE_ENV:", process.env.NODE_ENV);
+    // 設置 Cookies
+    setTokenCookie(res, "accessToken", accessToken);
+    setTokenCookie(res, "refreshToken", refreshToken);
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      sameSite: "None", // 如果是跨域，設置為 "None"
-      secure: true, // 在生產環境中啟用 secure 標記
-      maxAge: 3600000, // 設置 Cookie 有效期 (1 小時)
+    console.log(user);
+
+    return res.status(200).send({
+      message: "登入成功",
+      data: {
+        userId: user.id,
+        followedProducts: user.followedProducts,
+        isAuthenticated: true,
+      },
     });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      sameSite: "None",
-      secure: true, // 在生產環境中啟用 secure 標記
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 設置 7 天有效期
-    });
-
-    return res.status(200).send({ message: "登入成功", data: user.id });
   } catch (error) {
     return res.status(500).send({ message: "伺服器發生錯誤" });
   }
@@ -86,8 +55,6 @@ const login = (req, res) => {
 
 const logout = (req, res) => {
   try {
-    // throw new Error("錯誤測試");
-
     res.clearCookie("refreshToken");
     res.clearCookie("accessToken");
     return res.status(200).send({ message: "成功登出", data: null });
@@ -97,15 +64,10 @@ const logout = (req, res) => {
 };
 
 const sendVerifyCode = async (req, res) => {
-  console.log(`using sendVerifyCode route`);
   const { email } = req.body;
   try {
-    // throw new Error("錯誤測試");
-
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const existingUser = await User.findOne({ email }).exec();
-    if (existingUser && existingUser.veriftyed === true) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser.verified === true) {
       return res.status(400).send({ message: "此信箱已經被註冊過" });
     }
 
@@ -119,48 +81,44 @@ const sendVerifyCode = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    const mailOptions = {
-      from: process.env.EMAIL,
-      to: email,
-      subject: "Verification Code",
-      text: `Your verification code is ${verificationCode}`,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
+    sendVerificationCode(email, verificationCode, (error, info) => {
       if (error) {
         console.log(error);
-        return res.status(500).send({ message: "無法發送驗證碼" });
-      } else {
-        console.log(verificationCode);
-        return res
-          .status(200)
-          .send({ message: "驗證碼已發送", data: verificationCode });
+        return res.status(500).send({ message: "無法發送驗證碼", data: null });
       }
+      console.log(verificationCode);
+      return res
+        .status(200)
+        .send({ message: "驗證碼已發送", data: verificationCode });
     });
   } catch (error) {
-    return res
-      .status(500)
-      .send({ message: `伺服器發生錯誤 + ${error.message}` });
+    return res.status(500).send({ message: `伺服器發生錯誤`, data: null });
   }
 };
 
 const refreshAccessToken = (req, res) => {
   const user = req.user;
-  const newAccessToken = gernerateAccessToken(user);
 
-  res.cookie("accessToken", newAccessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  });
+  const accessToken = gernerateToken(user, "access");
+
+  // 設置 Cookies
+  setTokenCookie(res, "accessToken", accessToken);
 
   return res.status(200).send({ message: null, data: null });
 };
 
 const checkAuth = (req, res) => {
-  console.log(`using checkAuth router`);
-  const userId = req.user.id;
+  console.log(`checkAuth`);
+  const user = req.user;
 
-  return res.status(200).send({ message: null, data: userId });
+  return res.status(200).send({
+    message: null,
+    data: {
+      userId: user.id,
+      followedProducts: user.followedProducts,
+      isAuthenticated: true,
+    },
+  });
 };
 
 module.exports = {

@@ -2,7 +2,7 @@ const User = require("../models/userModel");
 const Image = require("../models/imageModel");
 const { s3, DeleteObjectCommand } = require("../config/s3");
 
-const uploadProductImage = async (req, res) => {
+const uploadImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).send({ message: "沒有上傳圖片", data: null });
@@ -21,78 +21,82 @@ const uploadProductImage = async (req, res) => {
       $push: { images: savedImage._id },
     });
 
-    const { _id, url } = savedImage;
+    const { url } = savedImage;
     console.log(savedImage);
-    return res.status(200).send({ message: "上傳成功", data: { _id, url } });
+    return res.status(200).send({ message: "上傳成功", data: url });
   } catch (error) {
     console.log(error);
     return res.status(500).send({ message: "伺服器發生錯誤" });
   }
 };
 
-const getProductImages = async (req, res) => {
+const getUserImages = async (req, res) => {
   try {
     const userId = req.user.id;
-    // 從user中獲取products的ID陣列
-    const foundUser = await User.findById(userId).exec();
+
+    const foundUser = await User.findById(userId).populate(
+      "images",
+      "_id url createdAt"
+    );
+
     const imageIds = foundUser.images;
 
-    // 使用 $in 運算符查找所有符合 ID 陣列的圖片，並只返回 _id 和 url
-    const images = await Image.find({ _id: { $in: imageIds } })
-      .select("_id url")
-      .exec();
-
     const sortedImages = imageIds
-      .map((id) => images.find((image) => image._id.equals(id)))
-      .reverse();
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map((image) => image.url);
 
-    console.log(images);
     return res.status(200).send({ data: sortedImages });
   } catch (error) {
     res.status(500).send({ message: "無法獲取圖片" });
   }
 };
 
-const deleteProductImages = async (req, res) => {
-  const { imageId } = req.params;
+const deleteImages = async (req, res) => {
+  console.log(`deleteImages route`);
+  const imageUrl = decodeURIComponent(req.params.imageUrl);
+  console.log(imageUrl);
   const userId = req.user.id;
 
   try {
-    // throw new Error("錯誤測試");
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).send({ message: "找不到使用者" });
     }
 
-    // 先刪除圖片資料
-    const foundImageAndDelete = await Image.findByIdAndDelete(imageId);
-    if (!foundImageAndDelete) {
+    const foundImage = await Image.findOne({ url: imageUrl });
+    if (!foundImage) {
       return res.status(404).send({ message: "圖片未找到" });
     }
 
-    // 刪除 S3 上的圖片
-    const deleteCommand = new DeleteObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: foundImageAndDelete.key,
-    });
-    await s3.send(deleteCommand);
+    const deleteImagePromise = Image.deleteOne({ url: imageUrl }).exec();
+    const deleteS3ImagePromise = s3.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: foundImage.key,
+      })
+    );
+    const updateUserImage = User.updateOne(
+      { _id: userId },
+      { $pull: { images: foundImage._id } }
+    ).exec();
 
-    // 從用戶的 images 陣列中刪除該圖片 ID
-    await User.findByIdAndUpdate(userId, {
-      $pull: { images: imageId },
-    });
+    await Promise.all([
+      deleteImagePromise,
+      deleteS3ImagePromise,
+      updateUserImage,
+    ]);
 
-    res
+    return res
       .status(200)
-      .send({ message: "成功刪除圖片", data: foundImageAndDelete._id });
+      .send({ message: "成功刪除圖片", data: foundImage._id });
   } catch (error) {
     console.error("伺服器發生錯誤:", error);
-    res.status(500).send({ message: "伺服器發生錯誤" });
+    return res.status(500).send({ message: "伺服器發生錯誤" });
   }
 };
 
 module.exports = {
-  uploadProductImage,
-  getProductImages,
-  deleteProductImages,
+  uploadImage,
+  getUserImages,
+  deleteImages,
 };

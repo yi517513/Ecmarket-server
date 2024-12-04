@@ -3,18 +3,10 @@ const { Schema } = mongoose;
 
 const transactionSchema = new Schema(
   {
-    buyerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    sellerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    productId: { type: Schema.Types.ObjectId, ref: "Product" },
-    amount: { type: Number, required: true },
-    totalAmount: { type: Number, required: true },
-    paymentHtml: { type: String, required: true },
-    // 買家的付款狀態
-    paymentStatus: {
-      type: String,
-      enum: ["completed", "pending"],
-      default: "pending",
-    },
+    buyer: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    payment: { type: Schema.Types.ObjectId, ref: "Payment" },
     // 賣家的出貨狀態
     shipmentStatus: {
       type: String,
@@ -27,10 +19,8 @@ const transactionSchema = new Schema(
   }
 );
 
-// 為 buyerId 和 sellerId 添加索引以加快查詢速度
-transactionSchema.index({ buyerId: 1 });
-transactionSchema.index({ sellerId: 1 });
-transactionSchema.index({ sellerId: 1, paymentStatus: 1 });
+transactionSchema.index({ buyerId: 1, shipmentStatus: 1 });
+transactionSchema.index({ sellerId: 1, shipmentStatus: 1 });
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 module.exports = Transaction;

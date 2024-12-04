@@ -1,17 +1,11 @@
 const router = require("express").Router();
 const {
-  getOrder,
-  createOrder,
-  deleteOrder,
+  getOrderRedirectUrl,
+  createPayment,
 } = require("../controllers/paymentController");
 
-router.post("/createOrder", createOrder);
+router.post("/", createPayment);
 
-router.delete("/:transactionId", deleteOrder);
-
-router.get("/:transactionId", getOrder);
-
-// 驗證庫存路由 - 由後端發送的ejs對此路由發出請求並作為是否關閉的依據
-// router.get()
+router.get("/:paymentId", getOrderRedirectUrl);
 
 module.exports = router;

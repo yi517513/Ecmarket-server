@@ -1,15 +1,15 @@
 const router = require("express").Router();
 const {
-  uploadProductImage,
-  getProductImages,
-  deleteProductImages,
+  uploadImage,
+  getUserImages,
+  deleteImages,
 } = require("../../controllers/imageController");
 const { upload } = require("../../config/s3");
 
-router.post("/", upload.single("image"), uploadProductImage);
+router.post("/", upload.single("image"), uploadImage);
 
-router.get("/", getProductImages);
+router.get("/", getUserImages);
 
-router.delete("/:imageId", deleteProductImages);
+router.delete("/:imageUrl", deleteImages);
 
 module.exports = router;

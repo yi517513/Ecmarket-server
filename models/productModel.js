@@ -7,15 +7,10 @@ const productSchema = new Schema(
     price: { type: Number, required: true },
     inventory: { type: Number, required: true },
     description: { type: String, required: true },
-    images: [
-      {
-        _id: { type: Schema.Types.ObjectId, ref: "Image" },
-        url: { type: String },
-      },
-    ],
+    images: [{ type: String, required: true }],
     owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    transactions: [{ type: Schema.Types.ObjectId, ref: "Transaction" }], // 交易記錄
-    pendingShipment: { type: Number, default: 0 },
+    followerCount: { type: Number, default: 0 },
+    soldAmount: { type: Number, default: 0 },
   },
   {
     timestamps: true,

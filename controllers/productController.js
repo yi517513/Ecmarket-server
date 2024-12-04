@@ -6,7 +6,6 @@ const postProduct = async (req, res) => {
     const { title, price, inventory, images, description } = req.body;
     const owner = req.user.id;
 
-    // console.log(req.body);
     const newProduct = new Product({
       title,
       price,
@@ -18,9 +17,10 @@ const postProduct = async (req, res) => {
 
     await newProduct.save();
 
-    await User.findByIdAndUpdate(owner, {
-      $push: { products: newProduct._id },
-    });
+    await User.updateOne(
+      { _id: owner },
+      { $push: { products: newProduct._id } }
+    );
 
     res.status(201).send({ data: newProduct._id, message: "成功新增商品" });
   } catch (error) {
@@ -29,25 +29,15 @@ const postProduct = async (req, res) => {
   }
 };
 
-const getUserProducts = async (req, res) => {
-  try {
-    const owner = req.user.id;
-    const foundProducts = await Product.find({ owner }).exec();
-    console.log(foundProducts);
-    return res.send({ message: null, data: foundProducts });
-  } catch (error) {
-    return res.status(500).send("伺服器發生錯誤");
-  }
-};
-
-const getProductById = async (req, res) => {
+const getProductForEdit = async (req, res) => {
+  console.log(`getProductForEdit`);
   const userId = req.user.id;
-  console.log(`userId: ${userId}`);
   try {
     const { productId } = req.params;
-    const foundProduct = await Product.findById(productId)
-      .populate("owner", ["username", "phone"])
-      .exec();
+    const foundProduct = await Product.findById(productId).populate("owner", [
+      "username",
+      "phone",
+    ]);
 
     const owner = foundProduct.owner._id.toString();
     if (userId !== owner) {
@@ -94,8 +84,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
   postProduct,
-  getUserProducts,
-  getProductById,
+  getProductForEdit,
   editProduct,
   deleteProduct,
 };
