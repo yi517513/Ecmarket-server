@@ -92,36 +92,42 @@ const handlePaymentCallback = async (req, res) => {
     const buyer = data.CustomField2;
     const seller = data.CustomField3;
 
-    console.log(paymentId);
+    console.log(paymentId, buyer, seller);
 
-    const payment = await Payment.findById(paymentId);
-    if (!payment) {
-      return res.status(404).send("找不到payment");
+    try {
+      const paymentObjectId = mongoose.Types.ObjectId(paymentId);
+      const buyerObjectId = mongoose.Types.ObjectId(buyer);
+      const sellerObjectId = mongoose.Types.ObjectId(seller);
+
+      const payment = await Payment.findById(paymentId);
+      if (!payment) {
+        return res.status(404).send("找不到payment");
+      }
+
+      // 更新payment的paymentStatus
+      const paymentPromise = Payment.findOneAndUpdate(
+        { _id: paymentObjectId },
+        { paymentStatus: "completed" },
+        { new: true }
+      ).exec();
+
+      const transactionPromise = new Transaction({
+        buyer: buyerObjectId,
+        seller: sellerObjectId,
+        product: payment.product,
+        payment: paymentObjectId,
+      }).save();
+
+      // 更新Product的inventory
+      const productPromise = Product.updateOne(
+        { _id: payment.product },
+        { $inc: { inventory: -payment.amount, soldAmount: payment.amount } } // 使用 $inc 來遞減庫存
+      ).exec();
+
+      await Promise.all([paymentPromise, transactionPromise, productPromise]);
+    } catch {
+      console.error("資料轉換或保存資料時發生錯誤:", error.message);
     }
-
-    // 更新payment的paymentStatus
-    const paymentPromise = Payment.findOneAndUpdate(
-      { _id: paymentId },
-      { paymentStatus: "completed" },
-      { new: true }
-    ).exec();
-
-    const transactionPromise = new Transaction({
-      buyer,
-      seller,
-      product: payment.product,
-      payment,
-    }).save();
-
-    // 更新Product的inventory
-    const productPromise = Product.updateOne(
-      { _id: payment.product },
-      { $inc: { inventory: -payment.amount, soldAmount: payment.amount } } // 使用 $inc 來遞減庫存
-    ).exec();
-
-    await Promise.all([paymentPromise, transactionPromise, productPromise]);
-  } else {
-    console.log(`驗證失敗`);
   }
 
   // 交易成功後，需要回傳 1|OK 給綠界
