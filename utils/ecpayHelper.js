@@ -32,6 +32,8 @@ const ecCreatePayment = ({
   TradeDesc,
   ItemName,
   CustomField1,
+  CustomField2,
+  CustomField3,
 }) => {
   const ecpay = new ecpay_payment(ecpayOptions);
   const base_param = {
@@ -43,6 +45,8 @@ const ecCreatePayment = ({
     ReturnURL: RETURN_URL,
     ClientBackURL: CLITEN_BACK_URL,
     CustomField1,
+    CustomField2,
+    CustomField3,
   };
 
   const paymentHtml = ecpay.payment_client.aio_check_out_all(base_param);
