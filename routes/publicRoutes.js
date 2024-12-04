@@ -10,6 +10,6 @@ router.get("/:productId", getPublicProductById);
 
 router.get("/", getPublicProducts);
 
-router.post("/payment/callback", handlePaymentCallback);
+router.post("/payment-result", handlePaymentCallback);
 
 module.exports = router;
