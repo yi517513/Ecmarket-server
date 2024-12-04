@@ -78,6 +78,7 @@ const getOrderRedirectUrl = async (req, res) => {
 };
 
 const handlePaymentCallback = async (req, res) => {
+  console.log(`接收金流callback`);
   const { CheckMacValue } = req.body;
   const data = { ...req.body };
 
@@ -119,6 +120,8 @@ const handlePaymentCallback = async (req, res) => {
     ).exec();
 
     await Promise.all([paymentPromise, transactionPromise, productPromise]);
+  } else {
+    console.log(`驗證失敗`);
   }
 
   // 交易成功後，需要回傳 1|OK 給綠界
