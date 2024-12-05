@@ -11,7 +11,7 @@ const {
 // 獲取追蹤商品
 router.get("/cart", getBuyerCartItems);
 // 加入追蹤商品
-router.post("/cart", addToBuyerCart);
+router.patch("/cart", addToBuyerCart);
 // 刪除追蹤商品
 router.delete("/cart/:productId", deleteBuyerCartItem);
 
