@@ -97,7 +97,9 @@ const handlePaymentCallback = async (req, res) => {
     console.log(`seller: ${seller}`);
 
     try {
-      const payment = await Payment.findById(paymentId).populate(["product"]);
+      const payment = await Payment.findById(paymentId).populate({
+        path: "product",
+      });
       if (!payment) {
         return res.status(404).send("找不到payment");
       }
