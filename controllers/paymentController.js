@@ -104,6 +104,8 @@ const handlePaymentCallback = async (req, res) => {
         return res.status(404).send("找不到payment");
       }
 
+      const productSnapshot = payment.product;
+
       // 更新payment的paymentStatus
       const paymentPromise = Payment.findOneAndUpdate(
         { _id: paymentId },
@@ -114,7 +116,15 @@ const handlePaymentCallback = async (req, res) => {
       const transactionPromise = new Transaction({
         buyer,
         seller,
-        product: payment.product,
+        product: {
+          _id: productSnapshot._id,
+          title: productSnapshot.title,
+          description: productSnapshot.description,
+          price: productSnapshot.price,
+          images: productSnapshot.images,
+          owner: productSnapshot.owner,
+          totalAmount: payment.totalAmount,
+        },
         payment: paymentId,
       }).save();
 
