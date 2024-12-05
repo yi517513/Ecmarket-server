@@ -5,7 +5,7 @@ const transactionSchema = new Schema(
   {
     buyer: { type: Schema.Types.ObjectId, ref: "User", required: true },
     seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    product: { type: String, required: true },
     payment: { type: Schema.Types.ObjectId, ref: "Payment" },
     // 賣家的出貨狀態
     shipmentStatus: {

@@ -70,25 +70,30 @@ const deleteBuyerCartItem = async (req, res) => {
 
 // 買家待收貨
 const getBuyerAwaitingShipment = async (req, res) => {
+  console.log(`getBuyerAwaitingShipment`);
   try {
     const userId = req.user.id;
 
     const pendingTransaction = await Transaction.find({
       buyer: userId,
       shipmentStatus: "pending",
-    });
+    }).populate(["product"]);
+
+    const pendingProducts = pendingTransaction.map(
+      (transaction) => transaction.product
+    );
+
+    console.log(pendingProducts.length);
 
     if (!pendingTransaction) {
       return res.status(200).send({ message: null, data: null });
     }
 
-    const pendingProductIds = pendingTransaction.product;
+    // const pendingProducts = await Product.find({
+    //   $in: { _id: pendingTransaction.product },
+    // });
 
-    const pendingProducts = await Product.find({
-      _id: { $in: pendingProductIds },
-    });
-
-    console.log(pendingProducts);
+    // console.log(pendingProducts);
 
     return res.status(200).send({ message: null, data: pendingProducts });
   } catch (error) {
