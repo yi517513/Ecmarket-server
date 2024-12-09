@@ -4,11 +4,10 @@ const Product = require("../models/productModel");
 const getSellerProducts = async (req, res) => {
   console.log(`getSellerProducts`);
   try {
-    const owner = req.user.id;
-    console.log(owner);
+    const { id } = req.user;
 
     // 查詢用戶所有商品
-    const foundProducts = await Product.find({ owner });
+    const foundProducts = await Product.find({ "owner.userId": id });
 
     console.log(foundProducts);
 

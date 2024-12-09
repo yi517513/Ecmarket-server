@@ -3,15 +3,7 @@ const LocalStrategy = require("passport-local").Strategy;
 const JwtStrategy = require("passport-jwt").Strategy;
 const bcrypt = require("bcrypt");
 const User = require("../models/userModel");
-
-// Token 提取器
-const cookieExtractor = (cookieName) => (req) => {
-  let token = null;
-  if (req && req.cookies) {
-    token = req.cookies[cookieName];
-  }
-  return token;
-};
+const { cookieExtractor } = require("../utils/cookieHelper");
 
 const opts_local = {
   usernameField: "email",

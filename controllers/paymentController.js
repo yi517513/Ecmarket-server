@@ -10,7 +10,7 @@ const {
 
 // 立即購買
 const createPayment = async (req, res) => {
-  const { owner: seller, _id: product, price, amount, title } = req.body;
+  const { ownerId: sellerId, _id: product, price, amount, title } = req.body;
   const buyer = req.user.id;
   const totalAmount = price * amount;
   const TradeNo = "test" + new Date().getTime();
@@ -36,7 +36,7 @@ const createPayment = async (req, res) => {
       ItemName: title,
       CustomField1: newPayment._id.toString(),
       CustomField2: buyer.toString(),
-      CustomField3: seller.toString(),
+      CustomField3: sellerId.toString(),
     });
 
     const redirectUrl = `${req.protocol}://${req.get("host")}/api/payment/${
@@ -122,7 +122,10 @@ const handlePaymentCallback = async (req, res) => {
           description: productSnapshot.description,
           price: productSnapshot.price,
           images: productSnapshot.images,
-          owner: productSnapshot.owner,
+          owner: {
+            userId: productSnapshot.owner.userId,
+            username: productSnapshot.owner.username,
+          },
           totalAmount: payment.totalAmount,
         },
         payment: paymentId,

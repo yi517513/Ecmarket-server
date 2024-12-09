@@ -11,13 +11,13 @@ const getPublicProducts = async (req, res) => {
 };
 
 const getPublicProductById = async (req, res) => {
-  console.log(`req.params: ${req.params}`);
+  console.log(`getPublicProductById`);
+  console.log(req.params);
   try {
     const { productId } = req.params;
-    const foundProduct = await Product.findById(productId).populate("owner", [
-      "username",
-      "phone",
-    ]);
+    const foundProduct = await Product.findById(productId);
+
+    console.log(foundProduct);
 
     return res.status(200).send({ message: null, data: foundProduct });
   } catch (error) {

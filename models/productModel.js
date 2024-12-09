@@ -8,7 +8,10 @@ const productSchema = new Schema(
     inventory: { type: Number, required: true },
     description: { type: String, required: true },
     images: [{ type: String, required: true }],
-    owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    owner: {
+      userId: { type: String, required: true },
+      username: { type: String, required: true },
+    },
     followerCount: { type: Number, default: 0 },
     soldAmount: { type: Number, default: 0 },
   },

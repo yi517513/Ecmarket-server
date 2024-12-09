@@ -6,18 +6,20 @@ const cors = require("cors");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const http = require("http");
-const { initializeSocket } = require("./sockets/socketService");
+const initializeSocket = require("./sockets/socketService");
 
 const authRoute = require("./routes/authRoute");
 const userCenter = require("./routes/userCenterRoute");
 const publicRoutes = require("./routes/publicRoutes");
 const paymentRoute = require("./routes/paymentRoute");
-const socket = require("./sockets/socket");
+
 const { passport_Access, passport_Refresh } = require("./middlewares/passport");
 
 const server = http.createServer(app);
-const io = initializeSocket(server); // 初始化 Socket.IO
+const io = initializeSocket(server); // 伺服器端的單一實例，管理所有的用戶連接
+
 const path = require("path");
+const socket = require("./sockets/socket");
 const port = process.env.PORT || 8080; // process.env.PORT是Heroku自行動態設定
 
 mongoose
@@ -45,17 +47,14 @@ app.use(cors(corsOptions));
 
 app.use(passport.initialize());
 
-socket(io);
+socket(io); // 用戶連接事件，獨立的socket實例是為每一個用戶單獨創建的
 
 // 認證相關路由
 app.use("/api/auth", authRoute);
-
 // 用戶中心相關路由
 app.use("/api/userCenter", passport_Refresh, userCenter);
-
 // 付款相關路由
 app.use("/api/payment", passport_Access, paymentRoute);
-
 // 公共路由
 app.use("/api", publicRoutes);
 

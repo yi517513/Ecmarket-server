@@ -4,7 +4,7 @@ const Product = require("../models/productModel");
 const postProduct = async (req, res) => {
   try {
     const { title, price, inventory, images, description } = req.body;
-    const owner = req.user.id;
+    const { id, username } = req.user;
 
     const newProduct = new Product({
       title,
@@ -12,15 +12,15 @@ const postProduct = async (req, res) => {
       inventory,
       description,
       images,
-      owner,
+      owner: {
+        userId: id,
+        username,
+      },
     });
 
     await newProduct.save();
 
-    await User.updateOne(
-      { _id: owner },
-      { $push: { products: newProduct._id } }
-    );
+    await User.updateOne({ _id: id }, { $push: { products: newProduct._id } });
 
     res.status(201).send({ data: newProduct._id, message: "成功新增商品" });
   } catch (error) {
@@ -34,13 +34,10 @@ const getProductForEdit = async (req, res) => {
   const userId = req.user.id;
   try {
     const { productId } = req.params;
-    const foundProduct = await Product.findById(productId).populate("owner", [
-      "username",
-      "phone",
-    ]);
+    const foundProduct = await Product.findById(productId);
 
-    const owner = foundProduct.owner._id.toString();
-    if (userId !== owner) {
+    const ownerId = foundProduct.owner.userId;
+    if (userId !== ownerId) {
       return res.status(401).send({ message: "Unauthorized", data: null });
     }
 

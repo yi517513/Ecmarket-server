@@ -12,7 +12,10 @@ const transactionSchema = new Schema(
         description: { type: String, required: true },
         price: { type: Number, required: true },
         images: [{ type: String, required: true }],
-        owner: { type: String, required: true },
+        owner: {
+          userId: { type: String, required: true },
+          username: { type: String, required: true },
+        },
         totalAmount: { type: Number, required: true },
       }),
     },

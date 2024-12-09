@@ -9,4 +9,27 @@ const setTokenCookie = (res, name, token, options = {}) => {
   res.cookie(name, token, { ...defaultOptions, ...options });
 };
 
-module.exports = { setTokenCookie };
+// Token 提取器 - Express格式
+const cookieExtractor = (cookieName) => (req) => {
+  // console.log(req);
+  let token = null;
+  if (req && req.cookies) {
+    token = req.cookies[cookieName];
+  }
+  return token;
+};
+
+const cookieParser = (cookieHeader) => {
+  const cookies = {};
+  if (!cookieParser) return cookies;
+
+  cookieHeader?.split(";").forEach((cookie) => {
+    const [key, value] = cookie.split("=").map((v) => v.trim());
+    if (key && value) {
+      cookies[key] = value;
+    }
+  });
+  return cookies;
+};
+
+module.exports = { setTokenCookie, cookieExtractor, cookieParser };

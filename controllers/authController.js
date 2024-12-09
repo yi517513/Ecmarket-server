@@ -38,12 +38,11 @@ const login = (req, res) => {
     setTokenCookie(res, "accessToken", accessToken);
     setTokenCookie(res, "refreshToken", refreshToken);
 
-    console.log(user);
-
     return res.status(200).send({
       message: "登入成功",
       data: {
         userId: user.id,
+        userName: user.username,
         followedProducts: user.followedProducts,
         isAuthenticated: true,
       },
