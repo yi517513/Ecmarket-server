@@ -30,7 +30,8 @@ const handleTopUp = async (payment, payerId, totalAmount) => {
     payment.isTransferred = "completed";
     await payment.save();
   } catch (error) {
-    throw new Error(`handleTopUp發生錯誤:${handleTopUp}`);
+    console.error("handleTopUp發生錯誤:", error.message);
+    throw new Error("handleTopUp發生錯誤");
   }
 };
 
@@ -64,7 +65,8 @@ const handlePurchase = async (payment, payerId, totalAmount) => {
 
     // payment.isTransferred將在transaction階段更新
   } catch (error) {
-    throw new Error(`handlePurchase發生錯誤:${handleTopUp}`);
+    console.error("handleTopUp發生錯誤:", error.message);
+    throw new Error("handlePurchase發生錯誤");
   }
 };
 
