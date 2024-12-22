@@ -3,23 +3,25 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
+const http = require("http");
+const server = http.createServer(app);
+
+const { initializeSocket } = require("./sockets/socketService");
+const io = initializeSocket(server); // 伺服器端的單一實例，管理所有的用戶連接
+const socket = require("./sockets/socket");
+
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
-const http = require("http");
-const initializeSocket = require("./sockets/socketService");
 
-const authRoute = require("./routes/authRoute");
-const userCenter = require("./routes/userCenterRoute");
+const authRoutes = require("./routes/authRoutes");
+const userCenterRoutes = require("./routes/userCenterRoutes");
 const publicRoutes = require("./routes/publicRoutes");
-const paymentRoute = require("./routes/paymentRoute");
+const paymentRoutes = require("./routes/paymentRoutes");
+
+const path = require("path");
 
 const { passport_Access, passport_Refresh } = require("./middlewares/passport");
 
-const server = http.createServer(app);
-const io = initializeSocket(server); // 伺服器端的單一實例，管理所有的用戶連接
-
-const path = require("path");
-const socket = require("./sockets/socket");
 const port = process.env.PORT || 8080; // process.env.PORT是Heroku自行動態設定
 
 mongoose
@@ -37,6 +39,8 @@ const corsOptions = {
   credentials: true, // 允許跨域設置 cookies
 };
 
+socket(io); // 用戶連接事件，獨立的socket實例是為每一個用戶單獨創建的
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
@@ -47,16 +51,14 @@ app.use(cors(corsOptions));
 
 app.use(passport.initialize());
 
-socket(io); // 用戶連接事件，獨立的socket實例是為每一個用戶單獨創建的
-
-// 認證相關路由
-app.use("/api/auth", authRoute);
-// 用戶中心相關路由
-app.use("/api/userCenter", passport_Refresh, userCenter);
-// 付款相關路由
-app.use("/api/payment", passport_Access, paymentRoute);
 // 公共路由
 app.use("/api", publicRoutes);
+// 認證相關路由
+app.use("/api/auth", authRoutes);
+// 用戶中心相關路由
+app.use("/api/userCenter", passport_Refresh, userCenterRoutes);
+// 付款相關路由
+app.use("/api/payment", passport_Access, paymentRoutes);
 
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);

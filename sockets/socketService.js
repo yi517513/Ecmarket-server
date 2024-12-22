@@ -1,15 +1,27 @@
 const { Server } = require("socket.io");
 
-const initializeSocket = (server) => {
-  const io = new Server(server, {
-    cors: {
-      credentials: true,
-      origin: "http://localhost:4000",
-      methods: ["GET", "POST"],
-    },
-  });
+let ioInstance = null;
 
-  return io;
+const initializeSocket = (server) => {
+  console.log("開始實例");
+  if (!ioInstance) {
+    ioInstance = new Server(server, {
+      cors: {
+        credentials: true,
+        origin: "http://localhost:4000",
+        methods: ["GET", "POST"],
+      },
+    });
+  }
+
+  return ioInstance;
 };
 
-module.exports = initializeSocket;
+const getSocketInstance = () => {
+  if (!ioInstance) {
+    throw new Error("Socket.io 未實例");
+  }
+  return ioInstance;
+};
+
+module.exports = { initializeSocket, getSocketInstance };

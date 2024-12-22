@@ -1,15 +1,17 @@
 const { cookieParser } = require("../utils/cookieHelper");
 const { decodeToken } = require("../utils/tokenHelper");
+const User = require("../models/userModel");
 
 class UserManager {
-  constructor() {
+  constructor(User) {
+    this.db = User;
     this.socketUsers = new Map();
     this.userSockets = new Map();
   }
 
-  getAllUser() {
+  printAllUser() {
     console.log(this.userSockets);
-    return this.userSockets;
+    console.log(`=====================================================`);
   }
 
   // decode refresh token 並獲取 userId與username
@@ -21,9 +23,10 @@ class UserManager {
       if (!payload || !payload.id) {
         throw new Error("無效的Token!");
       }
-      const { id: userId, username } = payload;
 
-      return { userId, username };
+      const { id: userId, username, lastLogoutTime } = payload;
+
+      return { userId, username, lastLogoutTime };
     } catch (error) {
       throw new Error("驗證失敗: " + error.message);
     }
@@ -32,10 +35,10 @@ class UserManager {
   // 儲存userId與Socket
   saveUserAndSocket(socket) {
     try {
-      const { userId, username } = this.verifyToken(socket);
+      const { userId, username, lastLogoutTime } = this.verifyToken(socket);
 
       // 將 socket.id 映射到用戶資料
-      this.socketUsers.set(socket.id, { userId, username });
+      this.socketUsers.set(socket.id, { userId, username, lastLogoutTime });
       // 將 userId 映射到單一的 socket.id
       this.userSockets.set(userId, socket.id);
     } catch (error) {
@@ -43,6 +46,21 @@ class UserManager {
         `保存用戶資料失敗 - socket.id: ${socket.id}, 原因: ${error.message}`
       );
       throw new Error("保存用戶資料失敗");
+    }
+  }
+
+  async getReceiverName(userId) {
+    try {
+      const receiverName = await this.db
+        .findById(userId)
+        .select("username -_id");
+
+      return receiverName;
+    } catch (error) {
+      console.error(
+        `獲取對象資料失敗 - userId: ${userId}, 原因: ${error.message}`
+      );
+      throw new Error("獲取對象資料失敗");
     }
   }
 
@@ -65,5 +83,5 @@ class UserManager {
     this.socketUsers.delete(socketId);
   }
 }
-
-module.exports = UserManager;
+const userManager = new UserManager(User); // 確保只有一個實例
+module.exports = userManager;

@@ -18,7 +18,7 @@ router.post("/register", validators.register, register);
 
 router.post("/login", validators.login, passport_Local, login);
 
-router.post("/logout", logout);
+router.post("/logout", passport_Refresh, logout);
 
 router.post("/sendVerifyCode", sendVerifyCode);
 

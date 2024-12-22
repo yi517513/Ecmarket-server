@@ -60,7 +60,31 @@ const validatePaymentCallback = (data) => {
   return checkValue;
 };
 
+const generatePaymentHtml = ({
+  totalAmount,
+  title,
+  paymentId,
+  payer,
+  payee,
+}) => {
+  const TradeNo = "test" + new Date().getTime();
+  return ecCreatePayment({
+    TradeNo,
+    TotalAmount: totalAmount,
+    TradeDesc: title,
+    ItemName: title,
+    CustomField1: paymentId,
+    CustomField2: payer,
+    CustomField3: payee,
+  });
+};
+
+const generateRedirectUrl = (paymentId, req) =>
+  `${req.protocol}://${req.get("host")}/api/payment/${paymentId}`;
+
 module.exports = {
   ecCreatePayment,
   validatePaymentCallback,
+  generatePaymentHtml,
+  generateRedirectUrl,
 };

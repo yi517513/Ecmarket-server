@@ -26,14 +26,19 @@ const transactionSchema = new Schema(
       enum: ["completed", "pending"],
       default: "pending",
     },
+    receivedStatus: {
+      type: String,
+      enum: ["completed", "pending"],
+      default: "pending",
+    },
   },
   {
     timestamps: true,
   }
 );
 
-transactionSchema.index({ buyerId: 1, shipmentStatus: 1 });
-transactionSchema.index({ sellerId: 1, shipmentStatus: 1 });
+transactionSchema.index({ buyerId: 1, shipmentStatus: 1, receivedStatus: 1 });
+transactionSchema.index({ sellerId: 1, shipmentStatus: 1, receivedStatus: 1 });
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 module.exports = Transaction;

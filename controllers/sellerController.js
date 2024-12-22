@@ -1,53 +1,30 @@
 const Transaction = require("../models/transactionModel");
 const Product = require("../models/productModel");
 
-const getSellerProducts = async (req, res) => {
-  console.log(`getSellerProducts`);
-  try {
-    const { id } = req.user;
-
-    // 查詢用戶所有商品
-    const foundProducts = await Product.find({ "owner.userId": id });
-
-    console.log(foundProducts);
-
-    // 查詢每個商品是否有未完成交易
-    const productsWithPendingStatus = await Promise.all(
-      foundProducts.map(async (product) => {
-        const hasPendingTransactions = await Transaction.exists({
-          productId: product._id,
-          shipmentStatus: "pending",
-        });
-
-        return {
-          ...product.toObject(),
-          hasPending: !!hasPendingTransactions,
-        };
-      })
-    );
-
-    console.log(productsWithPendingStatus);
-
-    return res.send({ message: null, data: productsWithPendingStatus });
-  } catch (error) {
-    return res.status(500).send("伺服器發生錯誤");
-  }
-};
-
 // 待發貨的訂單
 const getSellerPendingShipment = async (req, res) => {
-  console.log(`getSellerPendingShipment `);
   try {
-    const { userId } = req.params;
-    const foundTransaction = await Transaction.find({
-      sellerId: userId,
+    const userId = req.user.id;
+    const pendingTransaction = await Transaction.find({
+      seller: userId,
       shipmentStatus: "pending",
-    }).populate("productId", ["title", "images"]);
+      receivedStatus: "pending",
+    })
+      .populate({ path: "product", select: "-_id" })
+      .populate({ path: "buyer", select: "username" })
+      .select("product buyer");
 
-    if (!foundTransaction) {
-      return res.status(404).send("沒有交易紀錄");
+    if (!pendingTransaction) {
+      return res.status(200).send({ message: null, data: null });
     }
-    return res.status(200).send({ data: foundTransaction });
+
+    const pendingProducts = pendingTransaction.map((transaction) => ({
+      ...transaction.product._doc,
+      buyer: transaction.buyer,
+      _id: transaction._id,
+    }));
+
+    return res.status(200).send({ message: null, data: pendingProducts });
   } catch (error) {
     console.log(error);
     return res.status(500).send("發生錯誤");
@@ -57,15 +34,27 @@ const getSellerPendingShipment = async (req, res) => {
 // 出售歷史（已完成）
 const getSellerSalesHistory = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
     const foundTransaction = await Transaction.find({
-      sellerId: userId,
+      seller: userId,
       shipmentStatus: "completed",
-    });
+      receivedStatus: "completed",
+    })
+      .populate({ path: "product", select: "-_id" })
+      .populate({ path: "buyer", select: "username" })
+      .select("product buyer");
+
     if (!foundTransaction) {
-      return res.status(404).send("沒有交易紀錄");
+      return res.status(200).send({ message: null, data: null });
     }
-    return res.status(200).send({ data: foundTransaction });
+
+    const completedProducts = foundTransaction.map((transaction) => ({
+      ...transaction.product._doc,
+      buyer: transaction.buyer,
+      _id: transaction._id,
+    }));
+
+    return res.status(200).send({ data: completedProducts, message: null });
   } catch (error) {
     console.log(error);
     return res.status(500).send("發生錯誤");
@@ -74,38 +63,29 @@ const getSellerSalesHistory = async (req, res) => {
 
 // 確認出貨（更新交易狀態）
 const sellerConfirmShipment = async (req, res) => {
+  console.log(`using sellerConfirmShipment`);
   const { transactionId } = req.params;
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  console.log(`transactionId: ${transactionId}`);
 
   try {
     const updateTransaction = await Transaction.findByIdAndUpdate(
       transactionId,
-      {
-        shipmentStatus: "completed",
-      },
+      { shipmentStatus: "completed" },
       { new: true }
-    ).session(session);
+    );
     if (!updateTransaction) {
-      await session.abortTransaction();
       return res.status(404).send("沒有交易紀錄");
     }
 
-    await session.commitTransaction();
-    console.log("出貨成功");
-    return res.status(200).send({ message: "出貨成功" });
+    return res.status(200).send({ data: null, message: "出貨成功" });
   } catch (error) {
     console.log(error);
-    await session.abortTransaction();
+
     return res.status(500).send("發生錯誤");
-  } finally {
-    session.endSession();
   }
 };
 
 module.exports = {
-  getSellerProducts,
   getSellerPendingShipment,
   getSellerSalesHistory,
   sellerConfirmShipment,

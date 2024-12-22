@@ -1,132 +1,108 @@
-const Product = require("../models/productModel");
 const Transaction = require("../models/transactionModel");
-const User = require("../models/userModel");
 
-const getBuyerCartItems = async (req, res) => {
-  try {
-    const userId = req.user.id;
+// // 買家待收貨
+// const getBuyerAwaitingShipment = async (req, res) => {
+//   console.log(`getBuyerAwaitingShipment`);
+//   try {
+//     const userId = req.user.id;
 
-    // 查詢使用者的followedProducts
-    const user = await User.findById(userId).select("followedProducts");
-    console.log(user);
-    if (!user || !user.followedProducts || user.followedProducts.length === 0) {
-      return res.status(200).send({ message: null, data: null });
-    }
+//     const awaitingTransaction = await Transaction.find({
+//       buyer: userId,
+//       shipmentStatus: "pending",
+//     }).populate("product");
 
-    const followedProductIds = user.followedProducts;
+//     if (!awaitingTransaction) {
+//       return res.status(200).send({ message: null, data: null });
+//     }
 
-    // 根據ID查詢商品詳細
-    const followedProducts = await Product.find({
-      _id: { $in: followedProductIds },
-    });
+//     const awaitingProducts = awaitingTransaction.map(
+//       (transaction) => transaction.product
+//     );
 
-    console.log(followedProducts);
+//     return res.status(200).send({ message: null, data: awaitingProducts });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).send("發生錯誤");
+//   }
+// };
 
-    return res.status(200).send({ message: null, data: followedProducts });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("發生錯誤");
-  }
-};
+// // 買家待領收
+// const getBuyerAwaitingConfirm = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
 
-// 加入追蹤商品
-const addToBuyerCart = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { _id } = req.body;
+//     const awaitingTransaction = await Transaction.find({
+//       buyer: userId,
+//       shipmentStatus: "completed",
+//       receivedStatus: "pending",
+//     })
+//       .populate({ path: "product", select: "-_id -owner" })
+//       .select("product seller");
 
-    await Promise.all([
-      User.updateOne({ _id: userId }, { $push: { followedProducts: _id } }),
-      Product.updateOne({ _id }, { $inc: { followerCount: 1 } }),
-    ]);
+//     if (!awaitingTransaction) {
+//       return res.status(200).send({ message: null, data: null });
+//     }
 
-    return res.status(200).send({ message: "成功追蹤商品", data: null });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("發生錯誤");
-  }
-};
+//     const awaitingProducts = awaitingTransaction.map((transaction) => ({
+//       ...transaction.product._doc,
+//       seller: transaction.seller,
+//       _id: transaction._id,
+//     }));
 
-// 刪除追蹤商品
-const deleteBuyerCartItem = async (req, res) => {
-  try {
-    const { productId } = req.params;
-    const userId = req.user.id;
+//     return res.status(200).send({ message: null, data: awaitingProducts });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).send("發生錯誤");
+//   }
+// };
 
-    await Promise.all([
-      User.updateOne(
-        { _id: userId },
-        { $pull: { followedProducts: productId } }
-      ),
-      Product.updateOne({ _id: productId }, { $inc: { followerCount: -1 } }),
-    ]);
+// // 買家購買紀錄
+// const getBuyerPurchaseHistory = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const foundTransaction = await Transaction.find({
+//       buyer: userId,
+//       shipmentStatus: "completed",
+//       receivedStatus: "completed",
+//     })
+//       .populate({ path: "product", select: "-_id" })
+//       .select("product");
 
-    return res.status(200).send({ message: "成功移除追蹤商品", data: null });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("發生錯誤");
-  }
-};
+//     if (!foundTransaction) {
+//       return res.status(200).send({ message: null, data: null });
+//     }
 
-// 買家待收貨
-const getBuyerAwaitingShipment = async (req, res) => {
-  console.log(`getBuyerAwaitingShipment`);
-  try {
-    const userId = req.user.id;
+//     const completedProducts = foundTransaction.map((transaction) => ({
+//       ...transaction.product._doc,
+//       seller: transaction.product.owner,
+//       _id: transaction._id,
+//     }));
 
-    const pendingTransaction = await Transaction.find({
-      buyer: userId,
-      shipmentStatus: "pending",
-    }).populate(["product"]);
+//     return res.status(200).send({ data: completedProducts, message: null });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).send("發生錯誤");
+//   }
+// };
 
-    const pendingProducts = pendingTransaction.map(
-      (transaction) => transaction.product
-    );
+// // 確認出貨（更新交易狀態）
+// const BuyerConfirmReceived = async (req, res) => {
+//   const { transactionId } = req.params;
 
-    console.log(pendingProducts.length);
+//   try {
+//     const updateTransaction = await Transaction.findByIdAndUpdate(
+//       transactionId,
+//       { receivedStatus: "completed" },
+//       { new: true }
+//     );
+//     if (!updateTransaction) {
+//       return res.status(404).send("沒有交易紀錄");
+//     }
 
-    if (!pendingTransaction) {
-      return res.status(200).send({ message: null, data: null });
-    }
+//     return res.status(200).send({ data: null, message: "領收成功" });
+//   } catch (error) {
+//     console.log(error);
 
-    // const pendingProducts = await Product.find({
-    //   $in: { _id: pendingTransaction.product },
-    // });
-
-    // console.log(pendingProducts);
-
-    return res.status(200).send({ message: null, data: pendingProducts });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("發生錯誤");
-  }
-};
-
-// 買家購買紀錄
-const getBuyerPurchaseHistory = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const foundTransaction = await Transaction.find({
-      buyerId: userId,
-      shipmentStatus: "completed",
-    });
-
-    if (!foundTransaction) {
-      console.log("沒有交易紀錄");
-      return res.status(200).send({ message: null, data: null });
-    }
-
-    return res.status(200).send({ data: foundTransaction, message: null });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("發生錯誤");
-  }
-};
-
-module.exports = {
-  getBuyerCartItems,
-  addToBuyerCart,
-  deleteBuyerCartItem,
-  getBuyerAwaitingShipment,
-  getBuyerPurchaseHistory,
-};
+//     return res.status(500).send("發生錯誤");
+//   }
+// };

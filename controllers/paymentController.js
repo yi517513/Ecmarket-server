@@ -1,51 +1,89 @@
 const Payment = require("../models/paymentModel");
 const Product = require("../models/productModel");
-const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel");
-const { sendMessageToRoom } = require("../sockets/socketService");
 const {
-  ecCreatePayment,
   validatePaymentCallback,
+  generatePaymentHtml,
+  generateRedirectUrl,
 } = require("../utils/ecpayHelper");
+const messageGenerator = require("../utils/generateMessageHelper");
+const sendSystemMessage = require("../utils/systemMessageHelper");
+const { handleTopUp, handlePurchase } = require("../utils/paymentHandler");
 
 // 立即購買
 const createPayment = async (req, res) => {
-  const { ownerId: sellerId, _id: product, price, amount, title } = req.body;
-  const buyer = req.user.id;
-  const totalAmount = price * amount;
-  const TradeNo = "test" + new Date().getTime();
-
   try {
-    await User.updateOne(
-      { _id: buyer },
-      { $push: { followedProducts: product } }
-    );
-    await Product.updateOne({ _id: product }, { $inc: { followerCount: 1 } });
+    const { type } = req.query;
+    const payer = req.user.id;
+    // 檢查是否為有效的類型
+    if (!["topUp", "purchase"].includes(type)) {
+      return res.status(400).send({ message: "無效的查詢類型", data: null });
+    }
 
-    const newPayment = new Payment({
-      amount,
-      totalAmount,
-      product,
-    });
+    let redirectUrl;
+    let newPayment;
 
-    // 使用 ecCreatePayment 創建支付頁面
-    const paymentHtml = ecCreatePayment({
-      TradeNo,
-      TotalAmount: totalAmount,
-      TradeDesc: title,
-      ItemName: title,
-      CustomField1: newPayment._id.toString(),
-      CustomField2: buyer.toString(),
-      CustomField3: sellerId.toString(),
-    });
+    switch (type) {
+      case "topUp":
+        // 儲值到平台
+        const { topUpCash } = req.body;
+        newPayment = new Payment({
+          payer,
+          payee: "67512543a648b2a9c3b8f9bd",
+          paymentType: "topUp",
+          totalAmount: topUpCash,
+        });
 
-    const redirectUrl = `${req.protocol}://${req.get("host")}/api/payment/${
-      newPayment._id
-    }`;
+        const paymentHtmlTopUp = generatePaymentHtml({
+          totalAmount: topUpCash,
+          title: `平台儲值 ${topUpCash} 元`,
+          paymentId: newPayment._id.toString(),
+          payer,
+          payee: "67512543a648b2a9c3b8f9bd",
+        });
 
-    newPayment.paymentHtml = paymentHtml.toString();
+        newPayment.paymentHtml = paymentHtmlTopUp.toString();
+        redirectUrl = generateRedirectUrl(newPayment._id, req);
 
-    await newPayment.save();
+        await newPayment.save();
+        break;
+      case "purchase":
+        const { payee, productId, price, quantity, title } = req.body;
+
+        const totalAmount = price * amount;
+
+        await User.updateOne(
+          { _id: payer },
+          { $push: { followedProducts: productId } }
+        );
+        await Product.updateOne(
+          { _id: productId },
+          { $inc: { followerCount: 1 } }
+        );
+
+        newPayment = new Payment({
+          payer,
+          payee,
+          paymentType: "purchase",
+          product: { productId: _id, quantity },
+          totalAmount,
+        });
+
+        // 使用 ecCreatePayment 創建支付頁面
+        const paymentHtmlBuy = generatePaymentHtml({
+          totalAmount,
+          title,
+          paymentId: newPayment._id.toString(),
+          payer,
+          payee,
+        });
+
+        newPayment.paymentHtml = paymentHtmlBuy.toString();
+        redirectUrl = generateRedirectUrl(newPayment._id, req);
+
+        await newPayment.save();
+        break;
+    }
 
     return res.status(200).send({ data: redirectUrl, message: null });
   } catch (error) {
@@ -89,60 +127,30 @@ const handlePaymentCallback = async (req, res) => {
   // 交易正確性為true
   if (CheckMacValue === checkValue) {
     const paymentId = data.CustomField1;
-    const buyer = data.CustomField2;
-    const seller = data.CustomField3;
-
-    console.log(`paymentId: ${paymentId}`);
-    console.log(`buyer: ${buyer}`);
-    console.log(`seller: ${seller}`);
+    const payer = data.CustomField2;
+    const payee = data.CustomField3;
 
     try {
-      const payment = await Payment.findById(paymentId).populate({
-        path: "product",
-      });
-      if (!payment) {
-        return res.status(404).send("找不到payment");
-      }
-
-      const productSnapshot = payment.product;
-
-      // 更新payment的paymentStatus
-      const paymentPromise = Payment.findOneAndUpdate(
+      const payment = await Payment.findOneAndUpdate(
         { _id: paymentId },
         { paymentStatus: "completed" },
         { new: true }
-      ).exec();
+      );
+      const paymentType = payment.paymentType;
+      const totalAmount = payment.totalAmount;
 
-      const transactionPromise = new Transaction({
-        buyer,
-        seller,
-        product: {
-          _id: productSnapshot._id,
-          title: productSnapshot.title,
-          description: productSnapshot.description,
-          price: productSnapshot.price,
-          images: productSnapshot.images,
-          owner: {
-            userId: productSnapshot.owner.userId,
-            username: productSnapshot.owner.username,
-          },
-          totalAmount: payment.totalAmount,
-        },
-        payment: paymentId,
-      }).save();
-
-      // 更新Product的inventory
-      const productPromise = Product.updateOne(
-        { _id: payment.product },
-        { $inc: { inventory: -payment.amount, soldAmount: payment.amount } } // 使用 $inc 來遞減庫存
-      ).exec();
-
-      await Promise.all([paymentPromise, transactionPromise, productPromise]);
+      switch (paymentType) {
+        case "topUp":
+          await handleTopUp(payment, payer, totalAmount);
+          break;
+        case "purchase":
+          await handlePurchase(payment, payer, totalAmount);
+          break;
+      }
     } catch {
       console.log("資料轉換或保存資料時發生錯誤:", error);
     }
   }
-
   // 交易成功後，需要回傳 1|OK 給綠界
   res.send("1|OK");
 };

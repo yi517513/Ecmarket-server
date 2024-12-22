@@ -2,7 +2,7 @@ const {
   registerValidation,
   loginValidation,
 } = require("../validators/authValidator");
-const { publishValidation } = require("../validators/publishValidator");
+const { postValidation } = require("../validators/postValidation");
 
 class Validators {
   register = (req, res, next) => {
@@ -19,8 +19,8 @@ class Validators {
     }
     next();
   };
-  publish = (req, res, next) => {
-    const { error } = publishValidation(req.body);
+  postProduct = (req, res, next) => {
+    const { error } = postValidation(req.body);
     if (error) {
       return res.status(400).send(error.details[0].message);
     }

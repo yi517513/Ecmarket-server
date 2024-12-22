@@ -1,12 +1,15 @@
 const User = require("../models/userModel");
+const SystemMessage = require("../models/systemMessageModel");
 const bcrypt = require("bcrypt");
 const CryptoJS = require("crypto-js");
 const { gernerateToken } = require("../utils/tokenHelper");
 const { setTokenCookie } = require("../utils/cookieHelper");
 const { sendVerificationCode } = require("../utils/mailHelper");
+const sendSystemMessage = require("../utils/systemMessageHelper");
 
 const register = async (req, res) => {
-  const { email, password, verificationCode } = req.body;
+  const { username, email, password, verificationCode } = req.body;
+
   try {
     const user = await User.findOne({ email });
     if (!user || user.verificationCode !== verificationCode) {
@@ -16,7 +19,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
     user.verificationCode = undefined;
-    user.username = email;
+    user.username = username;
     user.verified = true;
     await user.save();
 
@@ -27,24 +30,29 @@ const register = async (req, res) => {
   }
 };
 
-const login = (req, res) => {
-  const user = req.user;
-
-  const accessToken = gernerateToken(user, "access");
-  const refreshToken = gernerateToken(user, "refresh");
-
+const login = async (req, res) => {
   try {
+    const user = req.user;
+
+    const accessToken = gernerateToken(user, "access");
+    const refreshToken = gernerateToken(user, "refresh");
+
     // 設置 Cookies
     setTokenCookie(res, "accessToken", accessToken);
     setTokenCookie(res, "refreshToken", refreshToken);
 
+    const systemMessages = await SystemMessage.getMessages(user.id);
+
+    console.log(systemMessages);
     return res.status(200).send({
       message: "登入成功",
       data: {
         userId: user.id,
         userName: user.username,
+        wallet: user.wallet,
         followedProducts: user.followedProducts,
         isAuthenticated: true,
+        systemMessages,
       },
     });
   } catch (error) {
@@ -52,10 +60,15 @@ const login = (req, res) => {
   }
 };
 
-const logout = (req, res) => {
+const logout = async (req, res) => {
   try {
+    const userId = req.user.id;
     res.clearCookie("refreshToken");
     res.clearCookie("accessToken");
+
+    const date = new Date();
+    await User.updateOne({ _id: userId }, { lastLogoutTime: date });
+
     return res.status(200).send({ message: "成功登出", data: null });
   } catch (error) {
     return res.status(500).send({ message: "伺服器發生錯誤" });
@@ -97,6 +110,12 @@ const sendVerifyCode = async (req, res) => {
 
 const refreshAccessToken = (req, res) => {
   const user = req.user;
+
+  // sendSystemMessage({
+  //   userId: user.id,
+  //   content: "後端socket測試777",
+  //   target: "/user-center/buyer/transactions/open",
+  // });
 
   const accessToken = gernerateToken(user, "access");
 

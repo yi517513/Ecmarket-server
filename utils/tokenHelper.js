@@ -9,7 +9,11 @@ const getSecretKey = (type) => {
 const gernerateToken = (user, type) => {
   const payload = {
     id: user.id,
-    ...(type === "refresh" && { email: user.email, username: user.username }),
+    ...(type === "refresh" && {
+      email: user.email,
+      username: user.username,
+      lastLogoutTime: user.lastLogoutTime,
+    }),
   };
 
   const secretKey = getSecretKey(type);

@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-const publishValidation = (data) => {
+const postValidation = (data) => {
   const schema = Joi.object({
     title: Joi.string().min(3).required().messages({
       "string.min": "商品標題最少需要3個字。",
@@ -14,4 +14,4 @@ const publishValidation = (data) => {
   return schema.validate(data);
 };
 
-module.exports = { publishValidation };
+module.exports = { postValidation };

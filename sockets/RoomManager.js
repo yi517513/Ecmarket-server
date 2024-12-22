@@ -7,25 +7,25 @@ class RoomManager {
   }
 
   // 加入個人房間（登入後執行）
-  handleJoinRoom(socket, userId, { userName }) {
+  handleJoinRoom(socket, userId, { username }) {
     const room = `user_${userId}`;
     this.userRoom[userId] = {
       room,
-      userName,
+      username,
     };
     socket.join(room);
 
-    this.io.to(room).emit("roomJoined", `${userName} 加入個人房間`);
+    this.io.to(room).emit("roomJoined", `${username} 加入個人房間`);
   }
 
   rejoinPersonalRoom(socket, userId) {
     if (this.userRoom[userId]) {
-      const { room, userName } = this.userRoom[room];
+      const { room, username } = this.userRoom[room];
       socket.join(room); // 加回房間
 
       this.io
         .to(personalRoom)
-        .emit("roomRejoined", `${userName} 重新連接到房間`);
+        .emit("roomRejoined", `${username} 重新連接到房間`);
     }
   }
 

@@ -3,12 +3,12 @@ const {
   uploadImage,
   getUserImages,
   deleteImages,
-} = require("../../controllers/imageController");
-const { upload } = require("../../config/s3");
-
-router.post("/", upload.single("image"), uploadImage);
+} = require("../controllers/imageController");
+const { upload } = require("../config/s3");
 
 router.get("/", getUserImages);
+
+router.post("/", upload.single("image"), uploadImage);
 
 router.delete("/:imageUrl", deleteImages);
 
