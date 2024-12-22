@@ -6,8 +6,6 @@ const {
   generatePaymentHtml,
   generateRedirectUrl,
 } = require("../utils/ecpayHelper");
-const messageGenerator = require("../utils/generateMessageHelper");
-const sendSystemMessage = require("../utils/systemMessageHelper");
 const { handleTopUp, handlePurchase } = require("../utils/paymentHandler");
 
 // 立即購買
@@ -139,6 +137,9 @@ const handlePaymentCallback = async (req, res) => {
       const paymentType = payment.paymentType;
       const totalAmount = payment.totalAmount;
 
+      console.log(`payer: ${payer}`);
+      console.log(`totalAmount: ${totalAmount}`);
+
       switch (paymentType) {
         case "topUp":
           await handleTopUp(payment, payer, totalAmount);
@@ -147,8 +148,8 @@ const handlePaymentCallback = async (req, res) => {
           await handlePurchase(payment, payer, totalAmount);
           break;
       }
-    } catch {
-      console.log("資料轉換或保存資料時發生錯誤:", error);
+    } catch (error) {
+      console.error("資料轉換或保存資料時發生錯誤:", error.message);
     }
   }
   // 交易成功後，需要回傳 1|OK 給綠界
