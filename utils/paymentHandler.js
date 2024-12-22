@@ -42,7 +42,7 @@ const handlePurchase = async (payment, payerId, totalAmount) => {
     if (!product) {
       // 商品已刪除 - 退款到用戶錢包
       await User.updateOne({ _id: payerId }, { $inc: { wallet: totalAmount } });
-      payment.isTransferred = "completed";
+      payment.isTransferred = true;
       await payment.save();
       return;
     }
