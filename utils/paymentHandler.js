@@ -27,7 +27,7 @@ const handleTopUp = async (payment, payerId, totalAmount) => {
     });
 
     // 更新payment狀態
-    payment.isTransferred = "completed";
+    payment.isTransferred = true;
     await payment.save();
   } catch (error) {
     console.error("handleTopUp發生錯誤:", error.message);
