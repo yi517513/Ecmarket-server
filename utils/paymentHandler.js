@@ -1,30 +1,26 @@
 const User = require("../models/userModel");
 const Product = require("../models/productModel");
 const sendSystemMessage = require("./systemMessageHelper");
-const messageGenerator = require("./generateMessageHelper");
+const generateTargetRouteMsg = require("./generateMessageHelper");
 
 const handleTopUp = async (payment, payerId, totalAmount) => {
   console.log(`執行 handleTopUp`);
   try {
     // user wallet更新
-    const user = await User.findOneAndUpdate(
+    await User.updateOne(
       { _id: payerId },
       { $inc: { wallet: totalAmount } },
       { new: true }
     );
 
     // 生成socket訊息
-    const topUpMsg = messageGenerator({
-      userId: payerId,
-      username: user.username,
-      targetRoute: "UserWallet",
-    });
+    const topUpMsg = generateTargetRouteMsg("/user-center/user/wallet");
 
     // 發送通知
     sendSystemMessage({
       targetId: payerId,
       content: topUpMsg,
-      targetRoute: "UserWallet",
+      targetRoute: "/user-center/user/wallet",
     });
 
     // 更新payment狀態
@@ -51,11 +47,10 @@ const handlePurchase = async (payment, payerId, totalAmount) => {
     }
 
     // 商品未刪除 - 通知買方
-    const purchaseMsg = messageGenerator({
-      userId: payerId,
-      username: payment.username, // 確保有username
-      targetRoute: "/user-center/buyer/transactions/open",
-    });
+    const purchaseMsg = generateTargetRouteMsg(
+      "/user-center/buyer/transactions/open"
+    );
+
     sendSystemMessage({
       targetId: payerId,
       content: purchaseMsg,
