@@ -48,7 +48,7 @@ const createPayment = async (req, res) => {
       case "purchase":
         const { payee, productId, price, quantity, title } = req.body;
 
-        const totalAmount = price * amount;
+        const totalAmount = price * quantity;
 
         await User.updateOne(
           { _id: payer },
