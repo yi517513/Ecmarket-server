@@ -12,10 +12,20 @@ const sendSystemMessage = async ({ targetId, content, targetRoute }) => {
       content,
       targetRoute
     );
-    const { targetId: drop1, __v: drop2, ...message } = newMessage._doc;
+
+    const message = {
+      content: newMessage.content,
+      targetRoute: newMessage.targetRoute,
+      messageId: newMessage._id.toString(),
+      timestamp: newMessage.timestamp,
+    };
 
     // 通過messageManager發送消息
-    messageManager.sendMessage({ socketId, message, targetRoute });
+    messageManager.sendMessage({
+      socketId,
+      message: message,
+      targetRoute,
+    });
 
     return true;
   } catch (error) {

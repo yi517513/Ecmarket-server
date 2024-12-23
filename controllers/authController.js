@@ -6,6 +6,7 @@ const { gernerateToken } = require("../utils/tokenHelper");
 const { setTokenCookie } = require("../utils/cookieHelper");
 const { sendVerificationCode } = require("../utils/mailHelper");
 const sendSystemMessage = require("../utils/systemMessageHelper");
+const messageGenerator = require("../utils/generateMessageHelper");
 
 const register = async (req, res) => {
   const { username, email, password, verificationCode } = req.body;
@@ -41,9 +42,6 @@ const login = async (req, res) => {
     setTokenCookie(res, "accessToken", accessToken);
     setTokenCookie(res, "refreshToken", refreshToken);
 
-    const systemMessages = await SystemMessage.getMessages(user.id);
-
-    console.log(systemMessages);
     return res.status(200).send({
       message: "登入成功",
       data: {
@@ -52,7 +50,6 @@ const login = async (req, res) => {
         wallet: user.wallet,
         followedProducts: user.followedProducts,
         isAuthenticated: true,
-        systemMessages,
       },
     });
   } catch (error) {
@@ -111,10 +108,16 @@ const sendVerifyCode = async (req, res) => {
 const refreshAccessToken = (req, res) => {
   const user = req.user;
 
+  const message = messageGenerator({
+    userId: user.id,
+    username: user.username,
+    targetRoute: "/user-center/user/wallet",
+  });
+
   // sendSystemMessage({
-  //   userId: user.id,
-  //   content: "後端socket測試777",
-  //   target: "/user-center/buyer/transactions/open",
+  //   targetId: user.id,
+  //   content: message,
+  //   targetRoute: "/user-center/user/wallet",
   // });
 
   const accessToken = gernerateToken(user, "access");

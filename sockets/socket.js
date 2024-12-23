@@ -1,5 +1,6 @@
 const userManager = require("./userManager");
 const messageManager = require("./messageManager");
+const realTimeManager = require("./realTimeManager");
 
 const socket = (io) => {
   io.on("connection", (socket) => {
@@ -33,6 +34,22 @@ const socket = (io) => {
         });
       } catch (error) {
         console.error("initChatRoom失敗:", error.message);
+        callback({ success: false, error: error.message });
+      }
+    });
+
+    // 初始用戶資料 - 系統資訊、錢包
+    socket.on("initUser", async (callback) => {
+      try {
+        const { userId } = userManager.getUser(socket.id);
+        const { wallet, messages } = await realTimeManager.handleInit(userId);
+
+        callback({
+          success: true,
+          data: { wallet, messages },
+        });
+      } catch (error) {
+        console.error("initUser失敗:", error.message);
         callback({ success: false, error: error.message });
       }
     });
@@ -95,17 +112,27 @@ const socket = (io) => {
       }
     );
 
-    socket.on("updateReadStatus", async (unreadMessageIds, callback) => {
-      console.log(unreadMessageIds);
-      try {
-        await messageManager.handleUpdateMessages(unreadMessageIds);
+    socket.on(
+      "updateReadStatus",
+      async ({ unreadMessageIds, type }, callback) => {
+        try {
+          console.log(type);
+          console.log(unreadMessageIds);
+          if (type === "chat") {
+            await messageManager.handleUpdateMessages(unreadMessageIds);
+          } else if (type === "system") {
+            await realTimeManager.handleUpdateMessages(unreadMessageIds);
+          } else {
+            throw new Error("未知的消息類型");
+          }
 
-        callback({ success: true });
-      } catch (error) {
-        console.error("updateReadStatus失敗:", error.message);
-        callback({ success: false, error: error.message });
+          callback({ success: true });
+        } catch (error) {
+          console.error("updateReadStatus失敗:", error.message);
+          callback({ success: false, error: error.message });
+        }
       }
-    });
+    );
 
     // 處理斷開事件
     socket.on("disconnect", () => {
