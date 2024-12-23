@@ -18,10 +18,9 @@ const socket = (io) => {
 
     // 初始聊天室環境
     socket.on("initChatRoom", async (callback) => {
-      console.log(`initChatRoom`);
       try {
         const { userId, lastLogoutTime } = userManager.getUser(socket.id);
-        console.log(`messageManager:${messageManager}`);
+
         const { conversation, partnerList, hasNewMessage } =
           await messageManager.handleGetPartnerMessages({
             userId,
@@ -58,8 +57,6 @@ const socket = (io) => {
     socket.on("getReveiverName", async (receiverId, callback) => {
       try {
         const receiverName = await userManager.getReceiverName(receiverId);
-
-        console.log(`receiverName: ${receiverName}`);
 
         callback({
           success: true,
@@ -116,8 +113,6 @@ const socket = (io) => {
       "updateReadStatus",
       async ({ unreadMessageIds, type }, callback) => {
         try {
-          console.log(type);
-          console.log(unreadMessageIds);
           if (type === "chat") {
             await messageManager.handleUpdateMessages(unreadMessageIds);
           } else if (type === "system") {

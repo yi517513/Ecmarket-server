@@ -15,7 +15,7 @@ const createPayment = async (req, res) => {
     const payer = req.user.id;
     // 檢查是否為有效的類型
     if (!["topUp", "purchase"].includes(type)) {
-      return res.status(400).send({ message: "無效的查詢類型", data: null });
+      return res.status(400).send({ message: "無效的類型", data: null });
     }
 
     let redirectUrl;
@@ -63,7 +63,9 @@ const createPayment = async (req, res) => {
           payer,
           payee,
           paymentType: "purchase",
-          product: { productId: _id, quantity },
+          product: productId,
+          itemQuantity: quantity,
+          itemPrice: price,
           totalAmount,
         });
 
@@ -85,7 +87,7 @@ const createPayment = async (req, res) => {
 
     return res.status(200).send({ data: redirectUrl, message: null });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send("創建訂單時發生錯誤");
   }
 };
@@ -108,7 +110,7 @@ const getOrderRedirectUrl = async (req, res) => {
       paymentHtml,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send("伺服器發生錯誤");
   }
 };
@@ -137,9 +139,6 @@ const handlePaymentCallback = async (req, res) => {
       const paymentType = payment.paymentType;
       const totalAmount = payment.totalAmount;
 
-      console.log(`payer: ${payer}`);
-      console.log(`totalAmount: ${totalAmount}`);
-
       switch (paymentType) {
         case "topUp":
           await handleTopUp(payment, payer, totalAmount);
@@ -147,6 +146,8 @@ const handlePaymentCallback = async (req, res) => {
         case "purchase":
           await handlePurchase(payment, payer, totalAmount);
           break;
+        default:
+          console.error("無效的類型:", paymentType);
       }
     } catch (error) {
       console.error("資料轉換或保存資料時發生錯誤:", error.message);

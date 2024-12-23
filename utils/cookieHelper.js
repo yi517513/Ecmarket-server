@@ -11,7 +11,6 @@ const setTokenCookie = (res, name, token, options = {}) => {
 
 // Token 提取器 - Express格式
 const cookieExtractor = (cookieName) => (req) => {
-  // console.log(req);
   let token = null;
   if (req && req.cookies) {
     token = req.cookies[cookieName];

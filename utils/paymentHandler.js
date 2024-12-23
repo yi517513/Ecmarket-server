@@ -4,6 +4,7 @@ const sendSystemMessage = require("./systemMessageHelper");
 const messageGenerator = require("./generateMessageHelper");
 
 const handleTopUp = async (payment, payerId, totalAmount) => {
+  console.log(`執行 handleTopUp`);
   try {
     // user wallet更新
     const user = await User.findOneAndUpdate(
@@ -36,10 +37,12 @@ const handleTopUp = async (payment, payerId, totalAmount) => {
 };
 
 const handlePurchase = async (payment, payerId, totalAmount) => {
+  console.log(`執行 handlePurchase`);
   try {
-    const product = await Product.findById(payment.product.productId);
+    const product = await Product.findById(payment.product);
 
     if (!product) {
+      console.log("找不到商品");
       // 商品已刪除 - 退款到用戶錢包
       await User.updateOne({ _id: payerId }, { $inc: { wallet: totalAmount } });
       payment.isTransferred = true;

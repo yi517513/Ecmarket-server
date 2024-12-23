@@ -26,7 +26,7 @@ const getSellerPendingShipment = async (req, res) => {
 
     return res.status(200).send({ message: null, data: pendingProducts });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };
@@ -56,16 +56,14 @@ const getSellerSalesHistory = async (req, res) => {
 
     return res.status(200).send({ data: completedProducts, message: null });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };
 
 // 確認出貨（更新交易狀態）
 const sellerConfirmShipment = async (req, res) => {
-  console.log(`using sellerConfirmShipment`);
   const { transactionId } = req.params;
-  console.log(`transactionId: ${transactionId}`);
 
   try {
     const updateTransaction = await Transaction.findByIdAndUpdate(
@@ -79,7 +77,7 @@ const sellerConfirmShipment = async (req, res) => {
 
     return res.status(200).send({ data: null, message: "出貨成功" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
 
     return res.status(500).send("發生錯誤");
   }

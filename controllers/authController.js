@@ -26,7 +26,7 @@ const register = async (req, res) => {
 
     return res.status(201).send({ message: "註冊成功", data: null });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send({ message: "伺服器發生錯誤", data: null });
   }
 };
@@ -92,7 +92,7 @@ const sendVerifyCode = async (req, res) => {
 
     sendVerificationCode(email, verificationCode, (error, info) => {
       if (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).send({ message: "無法發送驗證碼", data: null });
       }
       console.log(verificationCode);
@@ -129,7 +129,6 @@ const refreshAccessToken = (req, res) => {
 };
 
 const checkAuth = (req, res) => {
-  console.log(`checkAuth`);
   const user = req.user;
 
   return res.status(200).send({

@@ -5,7 +5,7 @@ const deleteTransaction = async (req, res) => {
 
     return res.status(200).send({ message: null, data: awaitingProducts });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };
@@ -17,7 +17,7 @@ const confirmShipment = async (req, res) => {
 
     return res.status(200).send({ message: null, data: awaitingProducts });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };
@@ -29,7 +29,7 @@ const confirmReceive = async (req, res) => {
 
     return res.status(200).send({ message: null, data: awaitingProducts });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };

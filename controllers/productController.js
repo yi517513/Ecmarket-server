@@ -63,8 +63,6 @@ const getProductById = async (req, res) => {
 
     const foundProduct = await Product.findById(productId);
 
-    console.log(foundProduct);
-
     if (!foundProduct) {
       return res.status(404).send({ message: "商品不存在", data: null });
     }
@@ -109,14 +107,13 @@ const postProduct = async (req, res) => {
 
     res.status(201).send({ data: newProduct._id, message: "成功新增商品" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send("新增商品失敗");
   }
 };
 
 const editProduct = async (req, res) => {
   try {
-    console.log(req.body);
     const { title, price, inventory, images, description } = req.body;
     const { productId } = req.params;
 

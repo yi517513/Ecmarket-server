@@ -9,10 +9,9 @@ const paymentSchema = new Schema({
     enum: ["topUp", "purchase"],
     required: true,
   }, // 付款類型: 儲值或購買商品
-  product: {
-    productId: { type: Schema.Types.ObjectId, ref: "Product" },
-    quantity: { type: Number },
-  },
+  product: { type: Schema.Types.ObjectId, ref: "Product" },
+  itemQuantity: { type: Number },
+  itemPrice: { type: Number },
   totalAmount: { type: Number, required: true }, // 總付款金額
   paymentHtml: { type: String, required: true },
   paymentStatus: {

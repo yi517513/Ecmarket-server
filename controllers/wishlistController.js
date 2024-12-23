@@ -8,7 +8,7 @@ const getWishlistItems = async (req, res) => {
 
     // 查詢使用者的followedProducts
     const user = await User.findById(userId).select("followedProducts");
-    console.log(user);
+
     if (!user || !user.followedProducts || user.followedProducts.length === 0) {
       return res.status(200).send({ message: null, data: null });
     }
@@ -20,11 +20,9 @@ const getWishlistItems = async (req, res) => {
       _id: { $in: followedProductIds },
     });
 
-    console.log(followedProducts);
-
     return res.status(200).send({ message: null, data: followedProducts });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };
@@ -42,7 +40,7 @@ const addItemToWishlist = async (req, res) => {
 
     return res.status(200).send({ message: "成功追蹤商品", data: null });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };
@@ -63,7 +61,7 @@ const deleteItemFromWishlist = async (req, res) => {
 
     return res.status(200).send({ message: "成功移除追蹤商品", data: null });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send("發生錯誤");
   }
 };

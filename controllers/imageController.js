@@ -22,10 +22,10 @@ const uploadImage = async (req, res) => {
     });
 
     const { url } = savedImage;
-    console.log(savedImage);
+
     return res.status(200).send({ message: "上傳成功", data: url });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send({ message: "伺服器發生錯誤" });
   }
 };
@@ -52,9 +52,8 @@ const getUserImages = async (req, res) => {
 };
 
 const deleteImages = async (req, res) => {
-  console.log(`deleteImages route`);
   const imageUrl = decodeURIComponent(req.params.imageUrl);
-  console.log(imageUrl);
+
   const userId = req.user.id;
 
   try {

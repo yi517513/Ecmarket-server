@@ -36,7 +36,6 @@ class MessageManager {
 
   // 控制器使用
   sendMessage({ socketId, message, targetRoute }) {
-    console.log("成功發送後端訊息");
     try {
       this.io.to(socketId).emit("systemMessage", { message, targetRoute });
     } catch (error) {
@@ -187,7 +186,6 @@ class MessageManager {
       const partnerList = Array.from(partnerSet.values());
       const conversation = Object.values(result);
 
-      console.log(hasNewMessage);
       return { conversation, partnerList, hasNewMessage };
     } catch (error) {
       console.error("handleGetMessageWithPartner失敗:", error.message);

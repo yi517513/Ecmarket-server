@@ -22,14 +22,11 @@ class RealTimeManager {
   async getSystemMessages(userId) {
     try {
       const messages = await this.sys.getMessages(userId);
-      console.log(`messages:${messages}`);
 
       const transformedMessages = messages.map(({ _id, ...rest }) => ({
         messageId: _id.toString(),
         ...rest,
       }));
-
-      console.log(transformedMessages);
 
       return transformedMessages;
     } catch (error) {

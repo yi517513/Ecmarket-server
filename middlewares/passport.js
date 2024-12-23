@@ -6,7 +6,6 @@ const passport_Local = (req, res, next) => {
     { session: false },
     (err, user, info) => {
       if (err) {
-        console.log(`passport_Refresh err: ${err}`);
         return res.status(500).send({ message: "Server error", data: null });
       }
       if (!user) {
@@ -25,7 +24,6 @@ const passport_Access = (req, res, next) => {
     { session: false },
     (err, user, info) => {
       if (err) {
-        console.log(`passport_Refresh err: ${err}`);
         return res.status(500).send({ message: "Server error", data: null });
       }
       if (!user) {
