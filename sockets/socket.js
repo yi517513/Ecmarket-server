@@ -1,126 +1,103 @@
-const userManager = require("./userManager");
-const messageManager = require("./messageManager");
-const realTimeManager = require("./realTimeManager");
+const { getRealTimeManager, getChatManager } = require("../managers/index");
+const socketService = require("../services/socketService");
+const userService = require("../services/userService");
+const realTimeManager = getRealTimeManager();
+const chatManager = getChatManager();
+
+const { cookieParser } = require("../utils/cookieHelper");
+const { decodeToken } = require("../utils/tokenHelper");
 
 const socket = (io) => {
+  io.use((socket, next) => {
+    // decode refresh token 並獲取 userId與username
+    const cookie = cookieParser(socket.handshake.headers.cookie);
+    const payload = decodeToken(cookie["refreshToken"], "refresh");
+
+    if (!payload || !payload.id) {
+      throw new Error("無效的Token!");
+    }
+    // 將已驗證的用戶資訊存入socket.user
+    const { id: userId, username, lastLogoutTime } = payload;
+    socket.user = { userId, username, socketId: socket.id, lastLogoutTime };
+
+    // 保存socket與用戶的關聯
+    socketService.saveSocketUser(socket.id, userId, username, lastLogoutTime);
+    next();
+  });
+
   io.on("connection", (socket) => {
     console.log("成功建立連結");
-    // setInterval(() => userManager.printAllUser(), 5000);
-
-    try {
-      userManager.saveUserAndSocket(socket);
-    } catch (error) {
-      console.error("驗證失敗:", error.message);
-      socket.emit("auth_error", { message: "Token無效，請重新登錄。" });
-      socket.disconnect(true);
-      return;
-    }
 
     // 初始聊天室環境
-    socket.on("initChatRoom", async (callback) => {
+    socket.on("chat:init", async (callback) => {
       try {
-        const { userId, lastLogoutTime } = userManager.getUser(socket.id);
-
-        const { conversation, partnerList, hasNewMessage } =
-          await messageManager.handleGetPartnerMessages({
-            userId,
-            lastLogoutTime,
-          });
-
-        callback({
-          success: true,
-          data: { conversation, partnerList, hasNewMessage },
+        const response = await chatManager.initChatApp({
+          userId: socket.user.userId,
+          lastLogoutTime: socket.user.lastLogoutTime,
         });
+
+        callback({ success: true, data: response });
       } catch (error) {
-        console.error("initChatRoom失敗:", error.message);
+        console.error("chat:init失敗:", error.message);
         callback({ success: false, error: error.message });
       }
     });
 
-    // 初始用戶資料 - 系統資訊、錢包
-    socket.on("initUser", async (callback) => {
+    // 初始即時狀態 - 系統通知、用戶錢包
+    socket.on("realtime:init", async (callback) => {
       try {
-        const { userId } = userManager.getUser(socket.id);
-        const { wallet, messages } = await realTimeManager.handleInit(userId);
+        const response = await realTimeManager.initRealTime(socket.user.userId);
 
-        callback({
-          success: true,
-          data: { wallet, messages },
-        });
+        callback({ success: true, data: response });
       } catch (error) {
-        console.error("initUser失敗:", error.message);
+        console.error("realtime:init失敗:", error.message);
         callback({ success: false, error: error.message });
       }
     });
 
     // 獲取對象名稱
-    socket.on("getReveiverName", async (receiverId, callback) => {
+    socket.on("chat:getReveiverName", async (receiverId, callback) => {
       try {
-        const receiverName = await userManager.getReceiverName(receiverId);
+        const receiverName = await userService.getUsername(receiverId);
 
         callback({
           success: true,
           data: receiverName,
         });
       } catch (error) {
-        console.error("initChatRoom失敗:", error.message);
+        console.error("chat:getReveiverName失敗:", error.message);
         callback({ success: false, error: error.message });
       }
     });
 
     // 傳送消息事件
-    socket.on(
-      "onSendMessage",
-      async ({ receiverId, receiverName, content }, callback) => {
-        try {
-          const sender = userManager.getUser(socket.id);
-          if (!sender) {
-            throw new Error("身分驗證失敗，無法發送消息");
-          }
-          const { userId: senderId, username: senderName } = sender;
-          const senderSocketId = userManager.getSockets(senderId);
-          const receiverSocketId = userManager.getSockets(receiverId);
+    socket.on("chat:sendMessage", async ({ receiver, content }, callback) => {
+      try {
+        const { senderSocketId, senderMsg, receiverSocketId, receiverMsg } =
+          await chatManager.sendMessage(socket.user, receiver, content);
 
-          // 儲存時默認為'未讀'
-          const messageId = await messageManager.handleSaveMessage({
-            senderId,
-            senderName,
-            receiverId,
-            receiverName,
-            content,
-          });
-
-          // 發送時，接收方 默認為'未讀'
-          await messageManager.handleSendMessage({
-            senderSocketId,
-            senderId,
-            receiverId,
-            senderName,
-            receiverSocketId,
-            content,
-            messageId,
-          });
-
-          callback({ success: true });
-        } catch (error) {
-          console.error("onSendMessage失敗:", error.message);
-          callback({ success: false, error: error.message });
+        io.to(senderSocketId).emit("chat:receiveMessage", senderMsg);
+        // 對方上線才發送
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("chat:receiveMessage", receiverMsg);
         }
+
+        callback({ success: true });
+      } catch (error) {
+        io.to(senderSocketId).emit("chat:receiveMessage", {
+          message: null,
+          error: "訊息發送失敗",
+        });
+        console.error("onSendMessage失敗:", error.message);
+        callback({ success: false, error: error.message });
       }
-    );
+    });
 
     socket.on(
-      "updateReadStatus",
+      "realtime:updateReadStatus",
       async ({ unreadMessageIds, type }, callback) => {
         try {
-          if (type === "chat") {
-            await messageManager.handleUpdateMessages(unreadMessageIds);
-          } else if (type === "system") {
-            await realTimeManager.handleUpdateMessages(unreadMessageIds);
-          } else {
-            throw new Error("未知的消息類型");
-          }
-
+          await realTimeManager.updateIsReadStatus(unreadMessageIds, type);
           callback({ success: true });
         } catch (error) {
           console.error("updateReadStatus失敗:", error.message);
@@ -131,8 +108,7 @@ const socket = (io) => {
 
     // 處理斷開事件
     socket.on("disconnect", () => {
-      console.log(`User disconnected: ${socket.id}`);
-      userManager.removeUser(socket.id);
+      socketService.removeUser(socket.id);
     });
   });
 };

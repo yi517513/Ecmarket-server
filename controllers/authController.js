@@ -6,7 +6,6 @@ const { gernerateToken } = require("../utils/tokenHelper");
 const { setTokenCookie } = require("../utils/cookieHelper");
 const { sendVerificationCode } = require("../utils/mailHelper");
 const sendSystemMessage = require("../utils/systemMessageHelper");
-const generateTargetRouteMsg = require("../utils/generateMessageHelper");
 
 const register = async (req, res) => {
   const { username, email, password, verificationCode } = req.body;
@@ -108,11 +107,8 @@ const sendVerifyCode = async (req, res) => {
 const refreshAccessToken = (req, res) => {
   const user = req.user;
 
-  const message = generateTargetRouteMsg("/user-center/user/wallet");
-
   // sendSystemMessage({
   //   targetId: user.id,
-  //   content: message,
   //   targetRoute: "/user-center/user/wallet",
   // });
 

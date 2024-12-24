@@ -45,7 +45,7 @@ chatMessageSchema.statics.updateMessages = function (filter, update) {
 };
 
 // 靜態方法: 獲取對話
-chatMessageSchema.statics.getPartnerMessages = async function (userId) {
+chatMessageSchema.statics.getMessages = async function (userId) {
   try {
     const messages = await this.find({
       $or: [{ senderId: userId }, { receiverId: userId }],

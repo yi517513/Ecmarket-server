@@ -27,7 +27,7 @@ const createPayment = async (req, res) => {
         const { topUpCash } = req.body;
         newPayment = new Payment({
           payer,
-          payee: "67512543a648b2a9c3b8f9bd",
+          payee: "6763f4d87f613773c6f1fca4",
           paymentType: "topUp",
           totalAmount: topUpCash,
         });
@@ -37,7 +37,7 @@ const createPayment = async (req, res) => {
           title: `平台儲值 ${topUpCash} 元`,
           paymentId: newPayment._id.toString(),
           payer,
-          payee: "67512543a648b2a9c3b8f9bd",
+          payee: "6763f4d87f613773c6f1fca4",
         });
 
         newPayment.paymentHtml = paymentHtmlTopUp.toString();
@@ -66,6 +66,7 @@ const createPayment = async (req, res) => {
           product: productId,
           itemQuantity: quantity,
           itemPrice: price,
+          itemTitle: title,
           totalAmount,
         });
 

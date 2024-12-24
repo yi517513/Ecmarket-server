@@ -1,86 +1,45 @@
 const User = require("../models/userModel");
 const Product = require("../models/productModel");
+const Payment = require("../models/paymentModel");
+const {
+  transferToPayer,
+  markPaymentTransferred,
+} = require("../utils/paymentHandler");
+const sendSystemMessage = require("../utils/systemMessageHelper");
+const notificationMediator = require("../mediators/NotificationMediator");
+const productService = require("../services/productService");
 
 const getProducts = async (req, res) => {
   try {
-    const { type } = req.query; // 查詢參數，表示查詢類型
-    // 檢查是否為有效的類型
-    if (!["public", "shop", "seller"].includes(type)) {
-      return res.status(400).send({ message: "無效的查詢類型", data: null });
-    }
+    const userId = req.params.userId;
+    const currentUserId = req.user.id;
 
-    let foundProducts;
-
-    switch (type) {
-      case "public":
-        // 查詢所有公開商品
-        foundProducts = await Product.find();
-        break;
-      case "shop":
-        // 查詢某用戶出售中的商品
-        const { userId: targetUserId } = req.params;
-        foundProducts = await Product.find({ "owner.userId": targetUserId });
-        break;
-      case "seller":
-        // 查詢已驗證用戶出售中的商品（庫存大於 0）
-        const authenticatedUserId = req.user.id;
-        foundProducts = await Product.find(
-          { "owner.userId": authenticatedUserId },
-          { inventory: { $gt: 0 } }
-        );
-        break;
-    }
-
-    // // 查詢每個商品是否有未完成交易
-    // const productsWithPendingStatus = await Promise.all(
-    //   foundProducts.map(async (product) => {
-    //     const hasPendingTransactions = await Transaction.exists({
-    //       productId: product._id,
-    //       shipmentStatus: "pending",
-    //     });
-
-    //     return {
-    //       ...product.toObject(),
-    //       hasPending: !!hasPendingTransactions,
-    //     };
-    //   })
-    // );
+    const foundProducts = await productService.fetchProductsByType(
+      { query: req.query },
+      { userId, currentUserId }
+    );
 
     return res.send({ message: null, data: foundProducts });
   } catch (error) {
-    return res.status(500).send("伺服器發生錯誤");
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).send({ message: error.message, data: null });
   }
 };
 
 const getProductById = async (req, res) => {
   try {
-    const { productId } = req.params;
-    const { type } = req.query;
+    const productId = req.params.productId;
+    const currentUserId = req.user.id;
 
-    if (!["single", "edit"].includes(type)) {
-      return res.status(400).send({ message: "無效的查詢類型", data: null });
-    }
-
-    const foundProduct = await Product.findById(productId);
-
-    if (!foundProduct) {
-      return res.status(404).send({ message: "商品不存在", data: null });
-    }
-
-    // 如果用途是編輯，需要檢查用戶權限
-    if (type === "edit") {
-      const userId = req.user.id;
-      const ownerId = foundProduct.owner.userId;
-
-      // 判斷是否為商品擁有者
-      if (userId !== ownerId) {
-        return res.status(403).send({ message: "無權限訪問", data: null });
-      }
-    }
+    const foundProduct = await productService.fetchProductById(
+      { query: req.query },
+      { productId, currentUserId }
+    );
 
     return res.status(200).send({ message: null, data: foundProduct });
   } catch (error) {
-    res.status(500).send("伺服器發生錯誤");
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).send({ message: error.message, data: null });
   }
 };
 
@@ -134,10 +93,43 @@ const editProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   const { productId } = req.params;
   try {
-    const foundProductAndDelete = await Product.findByIdAndDelete(productId);
-    return res
-      .status(200)
-      .send({ data: foundProductAndDelete._id, message: "成功刪除商品" });
+    const product = await Product.findOneAndDelete({ _id: productId });
+
+    // 與這筆商品有關連的訂單
+    const relatedPayments = await Payment.find({
+      product: productId,
+    }).lean();
+
+    const payers = relatedPayments.map((payment) => payment.payer);
+
+    if (relatedPayments.length > 0) {
+      // 處理相關付款記錄
+      await Promise.all(
+        relatedPayments.forEach((payment) => {
+          try {
+            // 發送通知 - 告知已付款用戶該商品已刪除
+            notificationMediator.dispatchSystemMessage({
+              io,
+              userIds: payment.payer,
+              targetRoute: "/user-center/buyer/pre-transaction",
+              type: "error",
+              option: { itemTitle: payment.itemTitle },
+            });
+            // 退回款項
+            transferToPayer(payment.payer, payment.totalAmount);
+            // 標記款項已轉移
+            markPaymentTransferred(payment);
+          } catch (error) {
+            console.error(
+              `處理付款記錄失敗，付款ID: ${payment._id}, 錯誤: `,
+              error.message
+            );
+          }
+        })
+      );
+    }
+
+    return res.status(200).send({ data: null, message: "成功刪除商品" });
   } catch (error) {
     return res.status(500).send("伺服器發生錯誤");
   }

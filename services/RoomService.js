@@ -1,4 +1,4 @@
-class RoomManager {
+class RoomService {
   constructor(io, MessageDb, ConversationDb) {
     this.io = io;
     this.message = MessageDb;
@@ -65,4 +65,4 @@ class RoomManager {
   }
 }
 
-module.exports = RoomManager;
+module.exports = RoomService;

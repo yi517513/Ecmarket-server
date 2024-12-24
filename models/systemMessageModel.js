@@ -24,6 +24,16 @@ systemMessageSchema.statics.saveMessage = async function (
   }
 };
 
+// 靜態方法: 批量更新訊息狀態
+systemMessageSchema.statics.updateMessages = function (filter, update) {
+  try {
+    return this.updateMany(filter, update);
+  } catch (error) {
+    console.error("updateMany失敗:", error);
+    throw new Error(`資料層錯誤: ${error.message || "未知錯誤"}`);
+  }
+};
+
 systemMessageSchema.statics.getMessages = async function (userId) {
   try {
     const messages = await this.find({ targetId: userId })
@@ -34,16 +44,6 @@ systemMessageSchema.statics.getMessages = async function (userId) {
     return messages;
   } catch (error) {
     console.error("getMessage失敗:", error);
-    throw new Error(`資料層錯誤: ${error.message || "未知錯誤"}`);
-  }
-};
-
-// 靜態方法: 批量更新訊息狀態
-systemMessageSchema.statics.updateMessages = function (filter, update) {
-  try {
-    return this.updateMany(filter, update);
-  } catch (error) {
-    console.error("updateMany失敗:", error);
     throw new Error(`資料層錯誤: ${error.message || "未知錯誤"}`);
   }
 };

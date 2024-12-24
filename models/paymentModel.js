@@ -12,6 +12,7 @@ const paymentSchema = new Schema({
   product: { type: Schema.Types.ObjectId, ref: "Product" },
   itemQuantity: { type: Number },
   itemPrice: { type: Number },
+  itemTitle: { type: String },
   totalAmount: { type: Number, required: true }, // 總付款金額
   paymentHtml: { type: String, required: true },
   paymentStatus: {

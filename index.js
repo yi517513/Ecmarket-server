@@ -6,8 +6,8 @@ const cors = require("cors");
 const http = require("http");
 const server = http.createServer(app);
 
-const { initializeSocket } = require("./sockets/socketService");
-const io = initializeSocket(server); // 伺服器端的單一實例，管理所有的用戶連接
+const socketService = require("./services/socketService");
+const io = socketService.initialize(server); // 伺服器端的單一實例，管理所有的用戶連接
 const socket = require("./sockets/socket");
 
 const passport = require("passport");

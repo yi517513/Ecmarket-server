@@ -1,17 +1,18 @@
-const userManager = require("../sockets/userManager");
-const messageManager = require("../sockets/messageManager");
-const SystemMessage = require("../models/systemMessageModel");
+const userManager = require("../services/userService");
+const messageManager = require("../services/messageService");
+const System = require("../models/systemMessageModel");
+const getRouteMessage = require("../utils/messageUtils");
 
-const sendSystemMessage = async ({ targetId, content, targetRoute }) => {
+const sendSystemMessage = async ({ targetId, targetRoute, type, option }) => {
   try {
+    // 根據目標路由生成訊息
+    const content = getRouteMessage(targetRoute, type, option);
+
     // 獲取用戶的 socketId
     const socketId = userManager.getSockets(targetId);
+
     // 存到db
-    const newMessage = await SystemMessage.saveMessage(
-      targetId,
-      content,
-      targetRoute
-    );
+    const newMessage = await System.saveMessage(targetId, content, targetRoute);
 
     const message = {
       content: newMessage.content,
