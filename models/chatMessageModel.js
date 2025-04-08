@@ -11,52 +11,11 @@ const chatMessageSchema = new Schema({
   timestamp: { type: Date, default: Date.now }, // 每條消息的時間戳
 });
 
-// 靜態方法: 儲存訊息
-chatMessageSchema.statics.saveMessage = function (
-  senderId,
-  senderName,
-  receiverId,
-  receiverName,
-  content
-) {
-  try {
-    const message = new this({
-      senderId,
-      senderName,
-      receiverId,
-      receiverName,
-      content,
-    });
-    return message.save();
-  } catch (error) {
-    console.error("saveMessage失敗:", error);
-    throw new Error(`資料層錯誤: ${error.message || "未知錯誤"}`);
-  }
-};
+// 建立複合索引：針對 senderId 與 _id
+chatMessageSchema.index({ senderId: 1, _id: 1 });
 
-// 靜態方法: 批量更新訊息狀態
-chatMessageSchema.statics.updateMessages = function (filter, update) {
-  try {
-    return this.updateMany(filter, update);
-  } catch (error) {
-    console.error("updateMany失敗:", error);
-    throw new Error(`資料層錯誤: ${error.message || "未知錯誤"}`);
-  }
-};
-
-// 靜態方法: 獲取對話
-chatMessageSchema.statics.getMessages = async function (userId) {
-  try {
-    const messages = await this.find({
-      $or: [{ senderId: userId }, { receiverId: userId }],
-    }).sort({ timestamp: 1 });
-
-    return messages;
-  } catch (error) {
-    console.error("getMessagesGroupedByPartner失敗:", error);
-    throw new Error(`資料層錯誤: ${error.message || "未知錯誤"}`);
-  }
-};
+// 建立複合索引：針對 receiverId 與 _id
+chatMessageSchema.index({ receiverId: 1, _id: 1 });
 
 const ChatMessage = mongoose.model("ChatMessage", chatMessageSchema);
 module.exports = ChatMessage;

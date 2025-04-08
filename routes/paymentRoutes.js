@@ -1,11 +1,6 @@
 const router = require("express").Router();
-const {
-  getOrderRedirectUrl,
-  createPayment,
-} = require("../controllers/paymentController");
+const { getOrderRedirectUrl } = require("../controllers/paymentController");
 
-router.post("/", createPayment);
-
-router.get("/:paymentId", getOrderRedirectUrl);
+router.get("/:orderId", getOrderRedirectUrl);
 
 module.exports = router;

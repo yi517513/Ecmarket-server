@@ -8,12 +8,13 @@ const productSchema = new Schema(
     inventory: { type: Number, required: true },
     description: { type: String, required: true },
     images: [{ type: String, required: true }],
-    owner: {
+    seller: {
       userId: { type: String, required: true },
       username: { type: String, required: true },
     },
-    followerCount: { type: Number, default: 0 },
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }], // 追蹤的用戶
     soldAmount: { type: Number, default: 0 },
+    timestamp: { type: Date, default: Date.now },
   },
   {
     timestamps: true,

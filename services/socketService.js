@@ -1,35 +1,47 @@
-const { Server } = require("socket.io");
+// const Socket = require("../config/socket");
+const { InternalServerError } = require("../errors/httpErrors");
 
 class SocketService {
   constructor() {
-    this.ioInstance = null;
+    this.io = "test";
     this.socketUsers = new Map();
     this.userSockets = new Map();
   }
 
-  initialize(server) {
-    if (!this.ioInstance) {
-      console.log("開始實例");
-      this.ioInstance = new Server(server, {
-        cors: {
-          credentials: true,
-          origin: "http://localhost:4000",
-          methods: ["GET", "POST"],
-        },
-      });
-    }
-    return this.ioInstance;
-  }
+  chatRoomSend = ({ targetId, message }) => {
+    if (!targetId) throw new InternalServerError("缺少對象 ID");
+    if (!message) throw new InternalServerError("缺少訊息");
 
-  getInstance() {
-    if (!this.ioInstance) {
-      throw new Error("Socket.io 未實例");
+    const socketId = this.userSockets.get(targetId);
+
+    if (socketId) {
+      this.io.to(socketId).emit("server:chat:message", message);
     }
-    return this.ioInstance;
-  }
+  };
+
+  tradeRoomSend = ({ targetId, message }) => {
+    if (!targetId) throw new InternalServerError("缺少對象 ID");
+    if (!message) throw new InternalServerError("缺少訊息");
+
+    const socketId = this.userSockets.get(targetId);
+
+    if (socketId) {
+      this.io.to(socketId).emit("trade:receiveMessage", message);
+    }
+  };
+
+  systemMessageNotify = (userId) => {
+    if (!userId) throw new InternalServerError("缺少用戶 ID");
+
+    const socketId = this.userSockets.get(userId);
+
+    if (socketId) {
+      this.io.to(socketId).emit("systemMessage:notification", true);
+    }
+  };
 
   // 儲存userId與Socket
-  saveSocketUser(socketId, userId, username, lastLogoutTime) {
+  saveSocketUser({ socketId, userId, username, lastLogoutTime }) {
     try {
       // 將 socket.id 映射到用戶資料
       this.socketUsers.set(socketId, { userId, username, lastLogoutTime });
@@ -44,13 +56,19 @@ class SocketService {
   }
 
   // 透過socket.id獲取用戶資料
-  getUser(socketId) {
+  getUserBySocketId(socketId) {
     return this.socketUsers.get(socketId) || null;
   }
 
   // 透過userId獲取用戶的socket.id
-  getSockets(userId) {
+  getSocketByUserId(userId) {
     return this.userSockets.get(userId) || null;
+  }
+
+  // 透過userId獲取用戶資料
+  getUsernameById(userId) {
+    const socketId = this.userSockets.get(userId);
+    return this.socketUsers.get(socketId)?.username || null;
   }
 
   // 移除用戶信息（斷開連線時清理）
@@ -65,3 +83,9 @@ class SocketService {
 
 const socketService = new SocketService();
 module.exports = socketService;
+
+// printAllUser() {
+//   console.log(this.socketUsers);
+//   console.log(this.userSockets);
+//   console.log(`=====================================================`);
+// }

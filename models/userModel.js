@@ -3,18 +3,20 @@ const { Schema } = mongoose;
 
 const userSchema = new Schema(
   {
+    userId: { type: Number, unique: true, index: true },
     username: { type: String, required: true },
-    email: { type: String, minlength: 6, required: true, unique: true },
+    email: {
+      type: String,
+      minlength: 6,
+      required: true,
+      unique: true,
+      index: true,
+    },
     password: { type: String, minlength: 6, required: true },
     wallet: { type: Number, default: 0 },
-    verificationCode: { type: String, required: false },
-    verified: { type: Boolean, required: true, default: false },
-    phone: { type: String },
-    images: [{ type: Schema.Types.ObjectId, ref: "Image" }],
-    products: [{ type: Schema.Types.ObjectId, ref: "Product" }], // 賣場刊登的產品
-    transactions: [{ type: Schema.Types.ObjectId, ref: "Transaction" }], // 交易記錄
-    followedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }], // 追蹤的商品
     lastLogoutTime: { type: Date, default: null },
+    lastLoginTime: { type: Date, default: null },
+    expiresAt: { type: Date, index: { expires: 0 } }, // TTL Index
   },
   {
     timestamps: true,

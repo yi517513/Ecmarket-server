@@ -2,30 +2,22 @@ const router = require("express").Router();
 const {
   register,
   login,
-  sendVerifyCode,
-  refreshAccessToken,
+  sendVerificationCode,
   logout,
-  checkAuth,
+  checkStatus,
 } = require("../controllers/authController");
-const { passport_Refresh, passport_Local } = require("../middlewares/passport");
-const validators = require("../middlewares/validator");
+const { authValidation } = require("../middlewares/validators/validations");
 
-router.use("/", (req, res, next) => {
-  next();
-});
+router.use(authValidation);
 
-router.post("/register", validators.register, register);
+router.post("/login", login);
 
-router.post("/login", validators.login, passport_Local, login);
+router.post("/register", register);
 
-router.post("/logout", passport_Refresh, logout);
+router.post("/send-code", sendVerificationCode);
 
-router.post("/sendVerifyCode", sendVerifyCode);
+router.post("/logout", logout);
 
-// 根據refressToken生命週期刷新accessToken(防止CSRF用)
-// 前後端資料存取時使用的是accessToken來驗證
-router.post("/refreshAccessToken", passport_Refresh, refreshAccessToken);
-
-router.get("/checkAuth", passport_Refresh, checkAuth);
+router.get("/me", checkStatus);
 
 module.exports = router;

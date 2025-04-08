@@ -1,144 +1,152 @@
-const User = require("../models/userModel");
-const Product = require("../models/productModel");
-const Payment = require("../models/paymentModel");
-const {
-  transferToPayer,
-  markPaymentTransferred,
-} = require("../utils/paymentHandler");
-const sendSystemMessage = require("../utils/systemMessageHelper");
-const notificationMediator = require("../mediators/NotificationMediator");
 const productService = require("../services/productService");
 
-const getProducts = async (req, res) => {
+const getProducts = async (req, res, next) => {
   try {
-    const userId = req.params.userId;
-    const currentUserId = req.user.id;
+    const { type, userId } = req.query;
+    const currentUserId = req.user?.userId;
 
-    const foundProducts = await productService.fetchProductsByType(
-      { query: req.query },
-      { userId, currentUserId }
-    );
+    const foundProducts = await productService.getProducts({
+      type,
+      targetUserId: userId,
+      currentUserId,
+    });
 
     return res.send({ message: null, data: foundProducts });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    return res.status(statusCode).send({ message: error.message, data: null });
+    next(error);
   }
 };
 
-const getProductById = async (req, res) => {
+const getProduct = async (req, res, next) => {
   try {
-    const productId = req.params.productId;
-    const currentUserId = req.user.id;
+    const { type } = req.query;
+    const { productId } = req.params;
+    const currentUserId = req.user?.userId;
 
-    const foundProduct = await productService.fetchProductById(
-      { query: req.query },
-      { productId, currentUserId }
-    );
+    const foundProduct = await productService.getProduct({
+      type,
+      productId,
+      currentUserId,
+    });
 
     return res.status(200).send({ message: null, data: foundProduct });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-    return res.status(statusCode).send({ message: error.message, data: null });
+    next(error);
   }
 };
 
-const postProduct = async (req, res) => {
+const getTracking = async (req, res, next) => {
   try {
-    const { title, price, inventory, images, description } = req.body;
-    const { id, username } = req.user;
+    const { type } = req.query;
+    const { productId } = req.params;
+    const currentUserId = req.user?.userId;
 
-    const newProduct = new Product({
-      title,
-      price,
-      inventory,
-      description,
-      images,
-      owner: {
-        userId: id,
-        username,
-      },
+    const foundProduct = await productService.getProduct({
+      type,
+      productId,
+      currentUserId,
     });
 
-    await newProduct.save();
-
-    await User.updateOne({ _id: id }, { $push: { products: newProduct._id } });
-
-    res.status(201).send({ data: newProduct._id, message: "成功新增商品" });
+    return res.status(200).send({ message: null, data: foundProduct });
   } catch (error) {
-    console.error(error);
-    res.status(500).send("新增商品失敗");
+    next(error);
   }
 };
 
-const editProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
   try {
-    const { title, price, inventory, images, description } = req.body;
-    const { productId } = req.params;
+    const productInfo = req.body;
+    const { userId: currentUserId, username: currentUsername } = req.user || {};
 
-    const editProduct = await Product.findByIdAndUpdate(
-      { _id: productId },
-      { title, price, inventory, images, description },
-      { new: true }
-    );
+    const newProductId = await productService.postProduct({
+      productInfo,
+      currentUserId,
+      currentUsername,
+    });
+
+    res.status(201).send({ data: newProductId, message: "成功新增商品" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateProduct = async (req, res, next) => {
+  try {
+    const updateInfo = req.body;
+    const { productId } = req.params;
+    const currentUserId = req.user?.userId;
+
+    const updatedProductId = await productService.updateProduct({
+      updateInfo,
+      productId,
+      currentUserId,
+    });
 
     return res
       .status(200)
-      .send({ data: editProduct._id, message: "成功更新商品" });
+      .send({ data: updatedProductId, message: "成功更新商品" });
   } catch (error) {
-    return res.status(500).send("伺服器發生錯誤");
+    next(error);
   }
 };
 
-const deleteProduct = async (req, res) => {
-  const { productId } = req.params;
+// 建立追蹤
+const createTracking = async (req, res, next) => {
   try {
-    const product = await Product.findOneAndDelete({ _id: productId });
+    const { productId } = req.params;
+    const currentUserId = req.user?.userId;
 
-    // 與這筆商品有關連的訂單
-    const relatedPayments = await Payment.find({
-      product: productId,
-    }).lean();
+    const updatedProductId = await productService.trackProduct({
+      productId,
+      currentUserId,
+    });
 
-    const payers = relatedPayments.map((payment) => payment.payer);
+    return res
+      .status(200)
+      .send({ data: updatedProductId, message: "成功追蹤商品" });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    if (relatedPayments.length > 0) {
-      // 處理相關付款記錄
-      await Promise.all(
-        relatedPayments.forEach((payment) => {
-          try {
-            // 發送通知 - 告知已付款用戶該商品已刪除
-            notificationMediator.dispatchSystemMessage({
-              io,
-              userIds: payment.payer,
-              targetRoute: "/user-center/buyer/pre-transaction",
-              type: "error",
-              option: { itemTitle: payment.itemTitle },
-            });
-            // 退回款項
-            transferToPayer(payment.payer, payment.totalAmount);
-            // 標記款項已轉移
-            markPaymentTransferred(payment);
-          } catch (error) {
-            console.error(
-              `處理付款記錄失敗，付款ID: ${payment._id}, 錯誤: `,
-              error.message
-            );
-          }
-        })
-      );
-    }
+// 移除追蹤
+const deleteTracking = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const currentUserId = req.user?.userId;
+
+    const updatedProductId = await productService.untrackProduct({
+      productId,
+      currentUserId,
+    });
+
+    return res
+      .status(200)
+      .send({ data: updatedProductId, message: "成功更新商品" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteProduct = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const currentUserId = req.user?.userId;
+
+    await productService.deleteProduct({ productId, currentUserId });
 
     return res.status(200).send({ data: null, message: "成功刪除商品" });
   } catch (error) {
-    return res.status(500).send("伺服器發生錯誤");
+    next(error);
   }
 };
 
 module.exports = {
   getProducts,
-  getProductById,
-  postProduct,
-  editProduct,
+  getProduct,
+  createProduct,
+  updateProduct,
   deleteProduct,
+  createTracking,
+  deleteTracking,
 };

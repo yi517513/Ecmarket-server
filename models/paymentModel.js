@@ -9,21 +9,9 @@ const paymentSchema = new Schema({
     enum: ["topUp", "purchase"],
     required: true,
   }, // 付款類型: 儲值或購買商品
-  product: { type: Schema.Types.ObjectId, ref: "Product" },
-  itemQuantity: { type: Number },
-  itemPrice: { type: Number },
-  itemTitle: { type: String },
-  totalAmount: { type: Number, required: true }, // 總付款金額
-  paymentHtml: { type: String, required: true },
-  paymentStatus: {
-    type: String,
-    enum: ["completed", "pending"],
-    default: "pending",
-  }, // 付款狀態
-  isTransferred: {
-    type: Boolean,
-    default: false,
-  }, // 是否完成轉移
+  order: { type: Schema.Types.ObjectId, ref: "Order" },
+  amount: { type: Number, required: true }, // 付款金額
+  timestamp: { type: Date, default: Date.now },
 });
 
 const Payment = mongoose.model("Payment", paymentSchema);

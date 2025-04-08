@@ -1,53 +1,27 @@
-const User = require("../models/userModel");
+const userRepository = require("../repository/userRepository");
+const { InternalServerError } = require("../errors/httpErrors");
 
 class UserService {
-  constructor(User) {
-    this.db = User;
+  constructor(userRepository) {
+    this.repo = userRepository;
   }
 
-  printAllUser() {
-    console.log(this.userSockets);
-    console.log(`=====================================================`);
-  }
+  async updateUserWallet({ payment, session }) {
+    const { amount, payee } = payment;
+    if (!amount) throw new InternalServerError("缺少金額資訊");
+    if (!payee) throw new InternalServerError("缺少用戶 ID");
+    if (!session) throw new InternalServerError("缺少sesion參數");
 
-  async getUser(userId) {
-    try {
-      const user = await this.db.findById(userId);
+    const updatedWallet = await this.userRepo.updateWallet({
+      amount,
+      userId,
+      session,
+    });
 
-      return user;
-    } catch (error) {
-      console.error(
-        `獲取對象資料失敗 - userId: ${userId}, 原因: ${error.message}`
-      );
-      throw new Error("獲取對象資料失敗");
-    }
-  }
-
-  async getUsername(userId) {
-    try {
-      const receiverName = await this.db
-        .findById(userId)
-        .select("username -_id");
-
-      return receiverName;
-    } catch (error) {
-      console.error(
-        `獲取對象資料失敗 - userId: ${userId}, 原因: ${error.message}`
-      );
-      throw new Error("獲取對象資料失敗");
-    }
-  }
-
-  async getUserWallet(userId) {
-    try {
-      const user = await this.db.findById(userId).select("wallet -_id");
-
-      return user.wallet;
-    } catch (error) {
-      console.error(error.message);
-      throw new Error("getUserWallet發生錯誤");
-    }
+    if (!updatedWallet)
+      throw new InternalServerError(`更新錢包失敗，用戶ID:${userId}`);
   }
 }
-const userService = new UserService(User); // 確保只有一個實例
+
+const userService = new UserService(userRepository); // 確保只有一個實例
 module.exports = userService;

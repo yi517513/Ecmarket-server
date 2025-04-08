@@ -1,44 +1,18 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const transactionSchema = new Schema(
-  {
-    buyer: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    product: {
-      type: new Schema({
-        _id: String,
-        title: { type: String, required: true },
-        description: { type: String, required: true },
-        price: { type: Number, required: true },
-        images: [{ type: String, required: true }],
-        owner: {
-          userId: { type: String, required: true },
-          username: { type: String, required: true },
-        },
-        totalAmount: { type: Number, required: true },
-      }),
-    },
-    payment: { type: Schema.Types.ObjectId, ref: "Payment" },
-    // 賣家的出貨狀態
-    shipmentStatus: {
-      type: String,
-      enum: ["completed", "pending"],
-      default: "pending",
-    },
-    receivedStatus: {
-      type: String,
-      enum: ["completed", "pending"],
-      default: "pending",
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-transactionSchema.index({ buyerId: 1, shipmentStatus: 1, receivedStatus: 1 });
-transactionSchema.index({ sellerId: 1, shipmentStatus: 1, receivedStatus: 1 });
+const transactionSchema = new Schema({
+  payer: { type: Schema.Types.ObjectId, ref: "User", required: true }, // 付款人
+  payee: { type: Schema.Types.ObjectId, ref: "User", required: true }, // 收款人
+  payment: { type: Schema.Types.ObjectId, ref: "Payment", required: true }, // 關聯付款
+  amount: { type: Number, required: true }, // 交易金額
+  transactionType: {
+    type: String,
+    enum: ["transfer", "refund"],
+    required: true,
+  }, // 交易類型：儲值、購買、退款
+  createdAt: { type: Date, default: Date.now }, // 交易建立時間
+});
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 module.exports = Transaction;
