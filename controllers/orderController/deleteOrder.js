@@ -3,7 +3,7 @@ const { OrderModel } = require("../../models");
 const deletelOrder = async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const currentUserId = req.user?.id;
+    const currentUserId = req.user?._id;
 
     await OrderModel.deleteOne({ _id: orderId, buyer: currentUserId });
 

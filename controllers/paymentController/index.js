@@ -1,3 +1,4 @@
 const { handlePaymentCallback } = require("./handlePaymentCallback");
+const { getPaymentHtml } = require("./getPaymentHtml");
 
-module.exports = { handlePaymentCallback };
+module.exports = { handlePaymentCallback, getPaymentHtml };
