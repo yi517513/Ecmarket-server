@@ -3,7 +3,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const { faker } = require("@faker-js/faker");
 const { ProductModel } = require("../models");
-const { fakeUser } = require("./fakeUser");
+const { user } = require("./user");
 
 // 資料庫連線
 mongoose.connect(process.env.MONGODB_URI);
@@ -15,13 +15,11 @@ const now = new Date();
 const generateFakeImageSnapshot = (ownerId) => {
   const _id = faker.string.uuid();
   const url = faker.image.url();
-  const createdAt = faker.date.between({ from: timestamp, to: now });
+  const createdAt = faker.date.recent({ days: 10 });
 
   return {
     _id,
     url,
-    ownerId: ownerId.toString(), // 快照 ownerId 是 string
-    timestamp,
     createdAt,
   };
 };
@@ -29,7 +27,8 @@ const generateFakeImageSnapshot = (ownerId) => {
 const generateFakeProduct = ({ index, ownerId, ownerUid }) => {
   const secondsGap = 5;
 
-  const shouldHaveImages = faker.datatype.boolean();
+  // 有 70% 機率產生圖片
+  const shouldHaveImages = Math.random() < 0.7;
   const imageSnapshots = shouldHaveImages
     ? Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () =>
         generateFakeImageSnapshot(ownerId)
@@ -58,7 +57,8 @@ const run = async () => {
   try {
     const allProducts = [];
 
-    fakeUser.forEach((user, userIndex) => {
+    // 只處理 user index 2~4（也就是 user[2], user[3], user[4]）
+    user.slice(2).forEach((user, userIndex) => {
       const { _id: ownerId, uid: ownerUid } = user;
 
       const userProducts = Array.from({ length: 30 }, (_, i) =>

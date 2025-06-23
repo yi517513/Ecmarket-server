@@ -7,6 +7,7 @@ const createOrder = async (req, res, next) => {
   try {
     const currentUserId = req.user?._id;
     const { productId, quantity, price } = req.body || {};
+    const totalAmount = price * quantity;
 
     const foundProduct = await ProductModel.findOne({ _id: productId });
     if (!foundProduct) throw HttpErrors.NotFound("找不到商品");
@@ -15,8 +16,6 @@ const createOrder = async (req, res, next) => {
       throw HttpErrors.Conflict("商品資訊已更新", "CONFLICT_UPDATED");
     }
     const { title, category } = foundProduct;
-    const totalAmount = price * quantity;
-
     const newOrder = await OrderModel.create({
       buyer: currentUserId,
       seller: foundProduct.ownerId,
