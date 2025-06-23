@@ -1,47 +1,33 @@
 class BaseHttpError extends Error {
-  constructor(name, message, statusCode) {
+  constructor(name, message, statusCode, code) {
     super(message);
     this.name = name;
     this.statusCode = statusCode;
+    this.code = code; // error code 給前端判斷用
   }
 }
 
 const HttpErrors = {
-  BadRequest: class extends BaseHttpError {
-    constructor(message = "Bad Request") {
-      super("BadRequestError", message, 400);
-    }
-  },
-  Unauthorized: class extends BaseHttpError {
-    constructor(message = "Unauthorized") {
-      super("UnauthorizedError", message, 401);
-    }
-  },
-  Forbidden: class extends BaseHttpError {
-    constructor(message = "Forbidden") {
-      super("ForbiddenError", message, 403);
-    }
-  },
-  NotFound: class extends BaseHttpError {
-    constructor(message = "Not Found") {
-      super("NotFoundError", message, 404);
-    }
-  },
-  Conflict: class extends BaseHttpError {
-    constructor(message = "Conflict") {
-      super("ConflictError", message, 409);
-    }
-  },
-  Unprocessable: class extends BaseHttpError {
-    constructor(message = "Unprocessable Entity") {
-      super("UnprocessableError", message, 422);
-    }
-  },
-  InternalServer: class extends BaseHttpError {
-    constructor(message = "Internal Server Error") {
-      super("InternalServerError", message, 500);
-    }
-  },
+  BadRequest: (message = "Bad Request", code = "BAD_REQUEST") =>
+    new BaseHttpError("BadRequestError", message, 400, code),
+
+  Unauthorized: (message = "Unauthorized", code = "UNAUTHORIZED") =>
+    new BaseHttpError("UnauthorizedError", message, 401, code),
+
+  Forbidden: (message = "Forbidden", code = "FORBIDDEN") =>
+    new BaseHttpError("ForbiddenError", message, 403, code),
+
+  NotFound: (message = "Not Found", code = "NOT_FOUND") =>
+    new BaseHttpError("NotFoundError", message, 404, code),
+
+  Conflict: (message = "Conflict", code = "CONFLICT") =>
+    new BaseHttpError("ConflictError", message, 409, code),
+
+  Unprocessable: (message = "Unprocessable Entity", code = "UNPROCESSABLE") =>
+    new BaseHttpError("UnprocessableError", message, 422, code),
+
+  InternalServer: (message = "Internal Server Error", code = "INTERNAL") =>
+    new BaseHttpError("InternalServerError", message, 500, code),
 };
 
 module.exports = { HttpErrors };

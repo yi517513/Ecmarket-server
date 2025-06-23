@@ -7,13 +7,13 @@ const { sessionService } = require("../../services");
 const login = async (req, res, next) => {
   try {
     const { email, password, device } = req.body;
-    if (!email || !password) throw new HttpErrors.BadRequest("缺少信箱或密碼");
+    if (!email || !password) throw HttpErrors.BadRequest("缺少信箱或密碼");
 
     const foundUser = await UserModel.findOne({ email });
-    if (!foundUser) throw new HttpErrors.Unauthorized("信箱或密碼錯誤");
+    if (!foundUser) throw HttpErrors.BadRequest("信箱或密碼錯誤");
 
     const isMatch = await bcrypt.compare(password, foundUser.hashedPassword);
-    if (!isMatch) throw new HttpErrors.Unauthorized("信箱或密碼錯誤");
+    if (!isMatch) throw HttpErrors.BadRequest("信箱或密碼錯誤");
 
     foundUser.loginAt = new Date();
     const updatedUser = await foundUser.save();

@@ -7,7 +7,7 @@ const getProductDetail = async (req, res, next) => {
     // console.log(productId);
 
     const foundProduct = await ProductModel.findOne({ _id: productId });
-    if (!foundProduct) throw new HttpErrors.NotFound("找不到商品");
+    if (!foundProduct) throw HttpErrors.NotFound("找不到商品");
 
     return res.status(200).json({ message: null, data: foundProduct });
   } catch (error) {

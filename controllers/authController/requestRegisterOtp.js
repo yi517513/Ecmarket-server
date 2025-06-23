@@ -6,11 +6,13 @@ const { otpService, emailService } = require("../../services");
 const requestRegisterOtp = async (req, res, next) => {
   try {
     const { email } = req.body;
-    if (!email) throw new HttpErrors.BadRequest("缺少信箱");
+    if (!email) throw HttpErrors.BadRequest("缺少信箱");
 
     // === 檢查信箱是否已被註冊 ===
     const existingUser = await UserModel.exists({ email });
-    if (existingUser) throw new HttpErrors.Conflict("此信箱已經被註冊過");
+    if (existingUser) {
+      throw HttpErrors.Conflict("此信箱已經被註冊過");
+    }
 
     // === 產生 otp ===
     const otp = otpGenerator();

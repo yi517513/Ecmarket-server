@@ -6,13 +6,15 @@ const { identityService, otpService } = require("../../services");
 const register = async (req, res, next) => {
   try {
     const { username, email, password, otp } = req.body;
-    if (!username || !email || !password || !otp)
-      throw new HttpErrors.BadRequest("缺少必要資訊");
+    if (!username || !email || !password || !otp) {
+      throw HttpErrors.InternalServer("register 缺少必要資訊");
+    }
 
     // === 根據 OTP 取得暫存的信箱資訊 ===
     const cachedOtp = await otpService.getOtp(email);
-    if (!cachedOtp || otp !== cachedOtp)
-      throw new HttpErrors.NotFound("驗證碼過期或錯誤");
+    if (!cachedOtp || otp !== cachedOtp) {
+      throw HttpErrors.Unprocessable("驗證碼錯誤或已過期");
+    }
 
     // === 密碼加密與產生使用者 UID ===
     const [hashedPassword, uid] = await Promise.all([

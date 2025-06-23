@@ -4,7 +4,6 @@ const {
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { fromEnv } = require("@aws-sdk/credential-provider-env");
-const { InternalServerError } = require("../../errors/httpErrors");
 
 const createS3Adapter = () => {
   // 設置 AWS SDK
@@ -14,10 +13,6 @@ const createS3Adapter = () => {
   });
 
   const uploadImage = async ({ buffer, mimetype, key }) => {
-    if (!buffer || !mimetype || !key) {
-      throw new InternalServerError("uploadImageToS3 - 參數缺失");
-    }
-
     await s3.send(
       new PutObjectCommand({
         Bucket: process.env.S3_BUCKET,

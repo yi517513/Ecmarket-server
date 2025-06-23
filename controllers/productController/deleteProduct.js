@@ -11,7 +11,7 @@ const deleteProduct = async (req, res, next) => {
       ownerId: currentUserId,
     });
 
-    if (!deletedProduct) throw new HttpErrors.NotFound("找不到商品");
+    if (!deletedProduct) throw HttpErrors.NotFound("找不到商品");
 
     return res.status(200).json({ data: null, message: "成功刪除商品" });
   } catch (error) {

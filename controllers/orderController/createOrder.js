@@ -1,3 +1,4 @@
+const { HttpErrors } = require("../../errors/httpErrors");
 const { OrderModel } = require("../../models");
 const { ProductModel } = require("../../models");
 const { paymentHtmlGenerator } = require("../../utils/adapters");
@@ -5,11 +6,15 @@ const { paymentHtmlGenerator } = require("../../utils/adapters");
 const createOrder = async (req, res, next) => {
   try {
     const currentUserId = req.user?._id;
-    const { productId, quantity } = req.body || {};
+    const { productId, quantity, price } = req.body || {};
 
     const foundProduct = await ProductModel.findOne({ _id: productId });
-    if (!foundProduct) return res.status(404).json({ message: "商品不存在" });
-    const { title, category, price } = foundProduct;
+    if (!foundProduct) throw HttpErrors.NotFound("找不到商品");
+
+    if (Number(price) !== foundProduct.price) {
+      throw HttpErrors.Conflict("商品資訊已更新", "CONFLICT_UPDATED");
+    }
+    const { title, category } = foundProduct;
     const totalAmount = price * quantity;
 
     const newOrder = await OrderModel.create({

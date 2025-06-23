@@ -1,4 +1,3 @@
-const { HttpErrors } = require("../../errors/httpErrors");
 const { ProductModel } = require("../../models");
 
 const createProduct = async (req, res, next) => {

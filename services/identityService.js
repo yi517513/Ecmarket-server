@@ -14,7 +14,7 @@ class IdentityService {
 
       return uid.toString();
     } catch (error) {
-      throw new HttpErrors.InternalServer("generateUserUid 發生錯誤:", error);
+      throw HttpErrors.InternalServer("generateUserUid 發生錯誤:", error);
     }
   }
 }

@@ -14,7 +14,7 @@ const updateProduct = async (req, res, next) => {
       { new: true, runValidators: true }
     );
 
-    if (!updatedProduct) throw new HttpErrors.NotFound("找不到商品");
+    if (!updatedProduct) throw HttpErrors.NotFound("找不到商品");
 
     const { category } = updatedProduct || {};
 

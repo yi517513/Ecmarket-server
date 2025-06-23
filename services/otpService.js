@@ -10,7 +10,7 @@ class OtpService {
     try {
       return await this.redisClient.hget(this.OTP_HASH_KEY, email);
     } catch (error) {
-      throw new HttpErrors.InternalServer("getOtp 發生錯誤:", error);
+      throw HttpErrors.InternalServer("getOtp 發生錯誤:", error);
     }
   }
 
@@ -20,7 +20,7 @@ class OtpService {
       await this.redisClient.hset(key, email, otp);
       await this.redisClient.call("HEXPIRE", key, ttl, "FIELDS", "1", email);
     } catch (error) {
-      throw new HttpErrors.InternalServer("setOtp 發生錯誤:", error);
+      throw HttpErrors.InternalServer("setOtp 發生錯誤:", error);
     }
   }
 
@@ -28,7 +28,7 @@ class OtpService {
     try {
       await this.redisClient.hdel(this.OTP_HASH_KEY, email);
     } catch (error) {
-      throw new HttpErrors.InternalServer("removeOtp 發生錯誤:", error);
+      throw HttpErrors.InternalServer("removeOtp 發生錯誤:", error);
     }
   }
 }

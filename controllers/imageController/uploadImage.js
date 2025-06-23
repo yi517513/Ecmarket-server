@@ -8,7 +8,7 @@ const uploadImage = async (req, res, next) => {
 
     const { originalname, buffer, mimetype } = req?.file;
     if (!originalname || !buffer || !mimetype) {
-      throw new HttpErrors.BadRequest("缺少必要的檔案資訊");
+      throw HttpErrors.InternalServer("uploadImage 缺少必要資訊");
     }
 
     const key = uuidv4() + "-" + originalname;

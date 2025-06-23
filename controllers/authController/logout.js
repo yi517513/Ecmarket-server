@@ -4,8 +4,11 @@ const { sessionService } = require("../../services");
 
 const logout = async (req, res, next) => {
   try {
+    if (!req.user || !req.user._id) {
+      throw HttpErrors.InternalServer("logout 缺少使用者資料");
+    }
+
     const { _id: userId, jti } = req.user || {};
-    if (!userId) throw new HttpErrors.BadRequest("缺少使用者 ID");
 
     await Promise.all([
       UserModel.updateOne({ _id: userId }, { $set: { logoutAt: new Date() } }),

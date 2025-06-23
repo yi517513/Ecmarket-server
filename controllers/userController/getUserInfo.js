@@ -16,11 +16,11 @@ const getUserInfo = async (req, res, next) => {
     } else if (email) {
       user = await UserModel.findOne({ email }).select("_id username uid role");
     } else {
-      throw new HttpErrors.BadRequest("請提供搜尋條件");
+      throw HttpErrors.BadRequest("請提供搜尋條件");
     }
 
     if (!user) {
-      throw new HttpErrors.NotFound("找不到使用者");
+      throw HttpErrors.NotFound("找不到使用者");
     }
 
     res.status(200).json({

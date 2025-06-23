@@ -4,7 +4,6 @@ const productRoutes = require("./productRoutes");
 const imageRoutes = require("./imageRoutes");
 const orderRoutes = require("./orderRoutes");
 const sessionRoutes = require("./sessionRoutes");
-const categoryRoutes = require("./categoryRoutes");
 const chatRoomRoutes = require("./chatRoomRoutes");
 const userRoutes = require("./userRoutes");
 
@@ -20,8 +19,6 @@ function setupRoutes(app) {
   app.use("/api/payment", paymentRoutes); // 付款相關路由
 
   app.use("/api/session", sessionRoutes); // session
-
-  app.use("/api/category", categoryRoutes); // category - home
 
   app.use("/api/chat", chatRoomRoutes); // chatRoom
 
