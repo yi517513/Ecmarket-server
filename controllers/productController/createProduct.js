@@ -2,8 +2,8 @@ const { ProductModel } = require("../../models");
 
 const createProduct = async (req, res, next) => {
   try {
-    const productInfo = req.body;
     const currentUserId = req.user?._id;
+    const productInfo = req.body;
 
     const newProduct = await ProductModel.create({
       ...productInfo,

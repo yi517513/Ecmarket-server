@@ -15,7 +15,6 @@ const now = new Date();
 const generateFakeImageSnapshot = (ownerId) => {
   const _id = faker.string.uuid();
   const url = faker.image.url();
-  const timestamp = faker.date.past();
   const createdAt = faker.date.between({ from: timestamp, to: now });
 
   return {

@@ -6,7 +6,6 @@ const imageSnapshotSchema = new Schema(
   {
     _id: { type: String, required: true }, // 保留為 string，因為不是 ref
     url: { type: String, required: true },
-    ownerId: { type: String, required: true }, // 同上
     createdAt: { type: Date, required: true },
   },
   { _id: false } // 不自動產生 _id
