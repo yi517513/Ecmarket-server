@@ -1,6 +1,7 @@
 const { HttpErrors } = require("../../errors/httpErrors");
 const { ImageModel } = require("../../models");
 const { s3Adapter } = require("../../utils/adapters");
+const { v4: uuidv4 } = require("uuid");
 
 const uploadImage = async (req, res, next) => {
   try {
