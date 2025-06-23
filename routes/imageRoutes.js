@@ -1,17 +1,17 @@
 const router = require("express").Router();
+const { imageController } = require("../controllers");
+const { uploadToMemory } = require("../middlewares/multer/uploadToMemory");
+const { requireAuth } = require("../middlewares/auth");
 
-const { uploadSingleFileToMemory } = require("../middlewares/multer/multer");
+router.get("/", requireAuth, imageController.getImages);
 
-const {
-  saveImage,
-  getImages,
-  deleteImage,
-} = require("../controllers/imageController");
+router.post(
+  "/",
+  requireAuth,
+  uploadToMemory("image"),
+  imageController.uploadImage
+);
 
-router.get("/", getImages);
-
-router.post("/", uploadSingleFileToMemory("image"), saveImage);
-
-router.delete("/:imageId", deleteImage);
+router.delete("/:imageId", requireAuth, imageController.deleteImage);
 
 module.exports = router;

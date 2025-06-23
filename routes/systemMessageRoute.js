@@ -1,6 +1,7 @@
 const router = require("express").Router();
-const { getSysMessage } = require("../controllers/systemMessageController");
+const { systemMessageController } = require("../controllers");
+const { requireAuth } = require("../middlewares/auth");
 
-router.get("/", getSysMessage);
+router.get("/", requireAuth, systemMessageController.getMessage);
 
 module.exports = router;

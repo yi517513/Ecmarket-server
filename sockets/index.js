@@ -1,20 +1,25 @@
-const { authMiddleware } = require("./middleware/authMiddleware");
-const { chatRoomHandlers } = require("./handlers/chatRoomHandlers");
-const { tradeRoomHandlers } = require("./handlers/tradeRoomHandlers");
+const authenticate = require("./middleware/authMiddleware");
+// const chatRoom = require("./listeners/chatRoom");
+const { socketService } = require("../services");
 
 module.exports = (io) => {
-  io.use(authMiddleware);
+  io.use(authenticate);
 
   io.on("connection", (socket) => {
-    console.log("socket成功建立連結");
+    // 正在輸入中..
+    socket.on("chatRoom:typing", ({ to }) => {
+      const senderId = socket.user?.userId;
+      const recipientSocketId = socketService.getSocketIdByUserId(to);
 
-    chatRoomHandlers(socket);
-
-    tradeRoomHandlers(socket);
+      if (!recipientSocketId) return;
+      io.to(recipientSocketId).emit("server:chatRoom:typing", {
+        from: senderId,
+      });
+    });
 
     // 處理斷開事件
     socket.on("disconnect", () => {
-      console.log("處理斷開事件");
+      socketService.unbindUserSocket(socket.user?.userId);
     });
   });
 };

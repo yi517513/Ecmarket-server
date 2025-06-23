@@ -2,17 +2,12 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const paymentSchema = new Schema({
-  payer: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  payee: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  paymentType: {
-    type: String,
-    enum: ["topUp", "purchase"],
-    required: true,
-  }, // 付款類型: 儲值或購買商品
-  order: { type: Schema.Types.ObjectId, ref: "Order" },
-  amount: { type: Number, required: true }, // 付款金額
-  timestamp: { type: Date, default: Date.now },
+  buyer: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  orderId: { type: String, required: true },
+  TradeAmt: { type: Number, required: true }, // 付款金額
+  createAt: { type: Date, default: Date.now },
 });
 
-const Payment = mongoose.model("Payment", paymentSchema);
-module.exports = Payment;
+const PaymentModel = mongoose.model("Payment", paymentSchema);
+module.exports = { PaymentModel };

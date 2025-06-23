@@ -1,17 +1,14 @@
 const router = require("express").Router();
-const {
-  getOrders,
-  getOrderDetail,
-  createOrder,
-  cancelOrder,
-} = require("../controllers/orderController");
+const { orderController } = require("../controllers");
+const { requireAuth } = require("../middlewares/auth");
 
-router.get("/", getOrders);
+// 訂單列表
+router.get("/", requireAuth, orderController.getOrders);
 
-router.get("/:orderId", getOrderDetail);
+// 建立商品訂單
+router.post("/", requireAuth, orderController.createOrder);
 
-router.post("/", createOrder);
-
-router.delete("/:orderId", cancelOrder);
+// 取消訂單
+router.delete("/:orderId", requireAuth, orderController.deletelOrder);
 
 module.exports = router;

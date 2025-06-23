@@ -3,7 +3,8 @@ const { Schema } = mongoose;
 
 const userSchema = new Schema(
   {
-    userId: { type: Number, unique: true, index: true },
+    // 100,000 + redis.incr ，100,015、100,016 開發用
+    uid: { type: String, unique: true, index: true },
     username: { type: String, required: true },
     email: {
       type: String,
@@ -12,16 +13,29 @@ const userSchema = new Schema(
       unique: true,
       index: true,
     },
-    password: { type: String, minlength: 6, required: true },
-    wallet: { type: Number, default: 0 },
-    lastLogoutTime: { type: Date, default: null },
-    lastLoginTime: { type: Date, default: null },
-    expiresAt: { type: Date, index: { expires: 0 } }, // TTL Index
+    hashedPassword: { type: String, minlength: 6, required: true },
+    // following: [{ type: String }],
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    logoutAt: { type: Date, default: null },
+    loginAt: { type: Date, default: null },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
-module.exports = User;
+userSchema.set("toJSON", {
+  transform(doc, ret) {
+    delete ret.__v;
+    delete ret.hashedPassword;
+    delete ret.updatedAt;
+    delete ret.createdAt;
+
+    return ret;
+  },
+});
+
+const UserModel = mongoose.model("User", userSchema);
+module.exports = { UserModel };

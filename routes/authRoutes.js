@@ -1,23 +1,15 @@
 const router = require("express").Router();
-const {
-  register,
-  login,
-  sendVerificationCode,
-  logout,
-  checkStatus,
-} = require("../controllers/authController");
-const { authValidation } = require("../middlewares/validators/validations");
+const { authController } = require("../controllers");
+const { requireAuth, optionalAuth } = require("../middlewares/auth");
 
-router.use(authValidation);
+router.post("/login", authController.login);
 
-router.post("/login", login);
+router.post("/register", authController.register);
 
-router.post("/register", register);
+router.post("/send-code", authController.requestRegisterOtp);
 
-router.post("/send-code", sendVerificationCode);
+router.post("/logout", requireAuth, authController.logout);
 
-router.post("/logout", logout);
-
-router.get("/me", checkStatus);
+router.get("/me", optionalAuth, authController.checkMe);
 
 module.exports = router;

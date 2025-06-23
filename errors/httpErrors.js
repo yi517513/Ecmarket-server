@@ -1,65 +1,47 @@
-class BadRequestError extends Error {
-  constructor(message) {
+class BaseHttpError extends Error {
+  constructor(name, message, statusCode) {
     super(message);
-    this.name = "BadRequestError";
-    this.statusCode = 400;
+    this.name = name;
+    this.statusCode = statusCode;
   }
 }
 
-class UnauthorizedError extends Error {
-  constructor(message = "Unauthorized") {
-    super(message);
-    this.name = "UnauthorizedError";
-    this.statusCode = 401;
-  }
-}
-
-class NotFoundError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "NotFoundError";
-    this.statusCode = 404;
-  }
-}
-
-class ForbiddenError extends Error {
-  constructor(message = "Forbidden") {
-    super(message);
-    this.name = "ForbiddenError";
-    this.statusCode = 403;
-  }
-}
-
-class ConflictError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ConflictError";
-    this.statusCode = 409;
-  }
-}
-
-class UnprocessableError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "Unprocessable";
-    this.statusCode = 422;
-  }
-}
-
-class InternalServerError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "InternalServerError";
-    this.statusCode = 500;
-  }
-}
-
-module.exports = {
-  BadRequestError,
-  UnauthorizedError,
-  NotFoundError,
-  ForbiddenError,
-  ConflictError,
-  UnprocessableError,
-  InternalServerError,
+const HttpErrors = {
+  BadRequest: class extends BaseHttpError {
+    constructor(message = "Bad Request") {
+      super("BadRequestError", message, 400);
+    }
+  },
+  Unauthorized: class extends BaseHttpError {
+    constructor(message = "Unauthorized") {
+      super("UnauthorizedError", message, 401);
+    }
+  },
+  Forbidden: class extends BaseHttpError {
+    constructor(message = "Forbidden") {
+      super("ForbiddenError", message, 403);
+    }
+  },
+  NotFound: class extends BaseHttpError {
+    constructor(message = "Not Found") {
+      super("NotFoundError", message, 404);
+    }
+  },
+  Conflict: class extends BaseHttpError {
+    constructor(message = "Conflict") {
+      super("ConflictError", message, 409);
+    }
+  },
+  Unprocessable: class extends BaseHttpError {
+    constructor(message = "Unprocessable Entity") {
+      super("UnprocessableError", message, 422);
+    }
+  },
+  InternalServer: class extends BaseHttpError {
+    constructor(message = "Internal Server Error") {
+      super("InternalServerError", message, 500);
+    }
+  },
 };
+
+module.exports = { HttpErrors };
