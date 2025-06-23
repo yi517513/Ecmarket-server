@@ -4,7 +4,11 @@ const cors = require("cors");
 
 // 設置 cors 選項
 const corsOptions = {
-  origin: ["http://localhost:4000", "http://localhost:5173"], // 允許的來源網址
+  origin: [
+    "http://localhost:4000",
+    "http://localhost:5173",
+    "https://yi517513-ecmarket-client.zeabur.app", // 前端正式網域
+  ], // 允許的來源網址
   methods: ["GET", "POST", "PATCH", "DELETE"], // 允許的 HTTP 方法
   allowedHeaders: ["Content-Type", "Authorization"], // 允許的頭部信息
   credentials: true, // 允許跨域設置 cookies
