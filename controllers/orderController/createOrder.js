@@ -9,7 +9,7 @@ const createOrder = async (req, res, next) => {
 
     const foundProduct = await ProductModel.findOne({ _id: productId });
     if (!foundProduct) return res.status(404).json({ message: "商品不存在" });
-    const { title, category } = foundProduct;
+    const { title, category, price } = foundProduct;
     const totalAmount = price * quantity;
 
     const newOrder = await OrderModel.create({
