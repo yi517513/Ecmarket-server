@@ -3,10 +3,8 @@ const { OrderModel } = require("../../models");
 const { PaymentModel } = require("../../models");
 
 const handlePaymentCallback = async (req, res, next) => {
-  console.log("handlePaymentCallback");
   try {
     const callbackInfo = req.body;
-    console.log(req.body);
 
     const {
       CheckMacValue,
