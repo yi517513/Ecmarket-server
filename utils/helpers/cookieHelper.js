@@ -1,6 +1,7 @@
 const { generateToken } = require("./tokenHelper");
 
 const createCookie = async (user, jti) => {
+  console.log("createCookie");
   try {
     const token = await generateToken(user, jti);
 
