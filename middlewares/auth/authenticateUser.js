@@ -23,7 +23,6 @@ const authenticateUser =
       res.clearCookie("jwt");
 
       if (mode === "optional") {
-        res.clearCookie("jwt");
         req.user = null;
         return next();
       }
@@ -48,17 +47,7 @@ const authenticateUser =
       const cookie = await createCookie(user, jti);
 
       const { name, value, options } = cookie;
-
-      // console.log("-------------------------");
-      // console.log("name:");
-      // console.log(name);
-      // console.log("-------------------------");
-      // console.log("value:");
-      // console.log(value);
-      // console.log("-------------------------");
-      // console.log("options:");
-      // console.log(options);
-      res.cookie(name, value, options);
+      // res.cookie(name, value, options);
     }
 
     req.user = { ...user, jti };
