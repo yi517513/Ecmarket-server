@@ -29,4 +29,18 @@ module.exports = (io) => {
       io.to(socketId).emit("server:chatRoom:notify");
     }
   });
+
+  // 通知發送者，接收者已讀了哪些訊息
+  eventBus.on(
+    "events:chat:onMessageRead",
+    ({ senderId, recipientId, messageIds }) => {
+      const socketId = socketService.getSocketIdByUserId(senderId);
+      if (socketId) {
+        io.to(socketId).emit("server:chatRoom:onMessageRead", {
+          recipientId,
+          messageIds,
+        });
+      }
+    }
+  );
 };

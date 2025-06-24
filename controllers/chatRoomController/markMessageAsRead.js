@@ -3,7 +3,7 @@ const { eventBus } = require("../../events/eventBus");
 
 const markMessageAsRead = async (req, res, next) => {
   try {
-    const userId = req.user?._id;
+    const currentUserId = req.user?._id;
     const { messageIds } = req.body;
 
     // 標記已讀
@@ -21,7 +21,7 @@ const markMessageAsRead = async (req, res, next) => {
     const peerId = sampleMessage?.from?.toString();
 
     const updatedSummaryRaw = await ChatSummaryModel.findOneAndUpdate(
-      { owner: userId, peer: peerId },
+      { owner: currentUserId, peer: peerId },
       { $inc: { unreadCount: -modifiedCount } },
       { new: true }
     ).populate({ path: "peer", select: "_id uid username" });
@@ -29,8 +29,14 @@ const markMessageAsRead = async (req, res, next) => {
     const updatedSummary = updatedSummaryRaw?.toJSON?.();
 
     eventBus.emit("events:chat:updateSummary", {
-      targetUserIds: [userId],
-      summaries: { [userId]: updatedSummary },
+      targetUserIds: [currentUserId],
+      summaries: { [currentUserId]: updatedSummary },
+    });
+
+    eventBus.emit("events:chat:onMessageRead", {
+      senderId: peerId,
+      recipientId: currentUserId,
+      messageIds,
     });
 
     return res.status(200).json({ message: null, data: null });

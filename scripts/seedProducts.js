@@ -12,9 +12,9 @@ const categories = ["mapleStory", "LoL"];
 const productTypes = ["account", "item", "money"];
 const now = new Date();
 
-const generateFakeImageSnapshot = (ownerId) => {
+const generateFakeImageSnapshot = () => {
   const _id = faker.string.uuid();
-  const url = faker.image.url();
+  const url = `https://picsum.photos/640/480?random=${faker.number.int(99999)}`;
   const createdAt = faker.date.recent({ days: 10 });
 
   return {
@@ -36,7 +36,7 @@ const generateFakeProduct = ({
   const shouldHaveImages = Math.random() < 0.7;
   const imageSnapshots = shouldHaveImages
     ? Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () =>
-        generateFakeImageSnapshot(ownerId)
+        generateFakeImageSnapshot()
       )
     : [];
 
