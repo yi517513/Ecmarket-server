@@ -24,7 +24,12 @@ const generateFakeImageSnapshot = (ownerId) => {
   };
 };
 
-const generateFakeProduct = ({ index, ownerId, ownerUid }) => {
+const generateFakeProduct = ({
+  index,
+  ownerId,
+  ownerUid,
+  forceHighPrice = false,
+}) => {
   const secondsGap = 5;
 
   // 有 70% 機率產生圖片
@@ -35,9 +40,13 @@ const generateFakeProduct = ({ index, ownerId, ownerUid }) => {
       )
     : [];
 
+  const price = forceHighPrice
+    ? faker.number.int({ min: 50000, max: 100000 })
+    : faker.number.int({ min: 1, max: 49999 });
+
   return {
     title: faker.commerce.productName(),
-    price: faker.commerce.price({ min: 1, max: 60000, dec: 0 }),
+    price,
     inventory: faker.number.int({ min: 1, max: 100 }),
     description: faker.lorem.paragraph(),
     images: imageSnapshots,
@@ -58,10 +67,11 @@ const run = async () => {
     const allProducts = [];
 
     // 只處理 user index 2~4（也就是 user[2], user[3], user[4]）
-    user.slice(2).forEach((user, userIndex) => {
+    user.slice(2, 5).forEach((user, userIndex) => {
       const { _id: ownerId, uid: ownerUid } = user;
 
-      const userProducts = Array.from({ length: 30 }, (_, i) =>
+      // 生成 30 筆價格小於 50000 的商品
+      const normalProducts = Array.from({ length: 30 }, (_, i) =>
         generateFakeProduct({
           index: userIndex * 30 + i, // 保證不同使用者也不重疊時間
           ownerId,
@@ -69,7 +79,15 @@ const run = async () => {
         })
       );
 
-      allProducts.push(...userProducts);
+      // 生成 1 筆價格 >= 50000 的商品
+      const highPriceProduct = generateFakeProduct({
+        index: userIndex * 100 + 30,
+        ownerId,
+        ownerUid,
+        forceHighPrice: true,
+      });
+
+      allProducts.push(...normalProducts, highPriceProduct);
     });
 
     await ProductModel.insertMany(allProducts);
