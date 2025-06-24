@@ -3,10 +3,9 @@ const { OrderModel } = require("../../models");
 const { PaymentModel } = require("../../models");
 
 const handlePaymentCallback = async (req, res, next) => {
-  console.log("handlePaymentCallback");
   try {
     const paymentData = req.body;
-    console.log(paymentData);
+
     const {
       CheckMacValue,
       CustomField1: orderId,

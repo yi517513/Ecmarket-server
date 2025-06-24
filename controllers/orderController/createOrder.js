@@ -23,13 +23,7 @@ const createOrder = async (req, res, next) => {
       quantity: Number(quantity),
       totalAmount,
     });
-    console.log(
-      totalAmount,
-      title,
-      newOrder.id,
-      currentUserId,
-      foundProduct.ownerId
-    );
+
     // 創建Ec-Pay支付頁面
     const paymentHtml = paymentHtmlGenerator({
       totalAmount,
