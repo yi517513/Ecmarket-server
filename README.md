@@ -1,18 +1,9 @@
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 95fbdf75669d5d286c8d7bf49da5133efc2e57e5
 # ECmarket 後端專案（Backend）
 
 此為 C2C 電商平台「ECmarket」的後端伺服器，使用 Node.js + Express 開發，提供商品管理、訂單處理、用戶驗證、聊天室、圖片上傳、付款模擬等完整 API，搭配 MongoDB 作為資料庫，並整合 AWS S3、Socket.IO、ECPay 等第三方服務。
 
 ---
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 95fbdf75669d5d286c8d7bf49da5133efc2e57e5
 ## 使用技術與套件
 
 - **Node.js 20**
@@ -34,10 +25,6 @@
 
 ---
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 95fbdf75669d5d286c8d7bf49da5133efc2e57e5
 ## API 功能模組
 
 | 模組     | 說明                                       |
@@ -50,10 +37,6 @@
 
 ---
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 95fbdf75669d5d286c8d7bf49da5133efc2e57e5
 ## Session 驗證與登入裝置管理
 
 本專案採用 **JWT + Redis 混合式認證機制**，同時支援多裝置登入狀態管理與安全驗證。
@@ -85,22 +68,14 @@
 
 ---
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 95fbdf75669d5d286c8d7bf49da5133efc2e57e5
 ### Cookie 安全性補充
 
 登入成功後，JWT 會儲存在 `httpOnly` cookie 中，避免被前端 JavaScript 存取，有效降低 XSS 攻擊風險。
 
 ---
-<<<<<<< HEAD
-=======
-
 
 ## 搭配後端
 
 此後端專案需搭配前端運作：
 
 👉 [前端專案 GitHub 連結（ECmarket Frontend）](https://github.com/yi517513/Ecmarket-client)
->>>>>>> 95fbdf75669d5d286c8d7bf49da5133efc2e57e5
