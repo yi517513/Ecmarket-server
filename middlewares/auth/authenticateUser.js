@@ -23,6 +23,7 @@ const authenticateUser =
       res.clearCookie("jwt");
 
       if (mode === "optional") {
+        console.log("return next();");
         req.user = null;
         return next();
       }
