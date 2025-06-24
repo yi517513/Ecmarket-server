@@ -47,7 +47,7 @@ const authenticateUser =
       const cookie = await createCookie(user, jti);
 
       const { name, value, options } = cookie;
-      // res.cookie(name, value, options);
+      res.cookie(name, value, options);
     }
 
     req.user = { ...user, jti };
