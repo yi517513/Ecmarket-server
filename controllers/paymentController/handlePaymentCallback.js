@@ -3,18 +3,19 @@ const { OrderModel } = require("../../models");
 const { PaymentModel } = require("../../models");
 
 const handlePaymentCallback = async (req, res, next) => {
+  console.log("handlePaymentCallback");
   try {
-    const callbackInfo = req.body;
-
+    const paymentData = req.body;
+    console.log(paymentData);
     const {
       CheckMacValue,
       CustomField1: orderId,
       CustomField2: buyer,
       CustomField3: seller,
       TradeAmt,
-    } = callbackInfo || {};
+    } = paymentData || {};
 
-    const checkValue = validatePaymentCallback(callbackInfo);
+    const checkValue = validatePaymentCallback(paymentData);
     if (CheckMacValue !== checkValue) throw new Error("金流Callback發生錯誤");
 
     await Promise.all([
