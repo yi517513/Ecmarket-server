@@ -18,8 +18,7 @@ const authenticateAdmin = () => async (req, res, next) => {
   const isAdmin = user?.role === "admin";
 
   if (!isAdmin) {
-    res.clearCookie("jwt");
-    console.error(`無權限存取 admin，使用者ID: ${user?._id}`);
+    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -27,7 +26,7 @@ const authenticateAdmin = () => async (req, res, next) => {
   const isAlive = await sessionService.isSessionAlive(user?._id, jti);
 
   if (!isAlive) {
-    res.clearCookie("jwt");
+    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
     return res.status(401).json("Session expired");
   }
 
