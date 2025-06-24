@@ -13,6 +13,7 @@ const authenticateUser =
   async (req, res, next) => {
     // === 提取 JWT token ===
     const token = cookieExtractor("jwt", req);
+    const hasToken = !!token;
 
     // === 驗證 Token ===
     const { status, user, jti } = await identifyToken(token);
@@ -20,10 +21,11 @@ const authenticateUser =
     // ==== 無效或沒有，清除 cookie ====
     const isInvalid = status === "none" || status === "invalid";
     if (isInvalid) {
-      res.clearCookie("jwt");
+      if (hasToken) {
+        res.clearCookie("jwt");
+      }
 
       if (mode === "optional") {
-        console.log("return next();");
         req.user = null;
         return next();
       }
