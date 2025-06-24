@@ -16,7 +16,7 @@ const authenticateUser =
 
     // === 驗證 Token ===
     const { status, user, jti } = await identifyToken(token);
-
+    console.log(status, user, jti);
     // ==== 無效或沒有，清除 cookie ====
     const isInvalid = status === "none" || status === "invalid";
     if (isInvalid) {
