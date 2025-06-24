@@ -29,7 +29,7 @@ const getPrivateProducts = async (req, res, next) => {
       ProductModel.countDocuments(query),
     ]);
 
-    console.log(totalItems);
+    // console.log(totalItems);
 
     return res.json({ data: { products, totalItems }, message: null });
   } catch (error) {

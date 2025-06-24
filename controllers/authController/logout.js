@@ -15,7 +15,8 @@ const logout = async (req, res, next) => {
       sessionService.removeUserSession(userId, jti),
     ]);
 
-    res.clearCookie("jwt");
+    // 必須與設置時一致
+    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
 
     return res.status(200).json({ message: "成功登出", data: null });
   } catch (error) {
